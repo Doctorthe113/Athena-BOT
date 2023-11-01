@@ -374,13 +374,14 @@ async def dictionary(interaction: Interaction, arg: str):
 
 
 
-@tasks.loop(hours = 3)
+@tasks.loop(hours = 12)
 async def balance_checker():
     Doc_ID = await client.fetch_user(699342617095438479)
     for i in [12021574, 12021575]:
-        balance, month_usage = features.desco.check_balance(i)
+        balance = features.desco.descoAPI(12).balanceCheck()["balance"]
+        month_usage = features.desco.descoAPI(i).balanceCheck()["currentMonthConsumption"]
 
-        if int(balance) <= 150:
+        if int(balance) <= 250:
             await Doc_ID.send(f"Heyy, you need to pay the electricity bill in {i}, Doctor.")
             await Doc_ID.send(f"{balance}৳ Balance left in {i} and this month's consumption up to this day is {month_usage}৳.")
 
