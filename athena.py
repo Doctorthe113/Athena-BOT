@@ -60,10 +60,10 @@ async def on_message(rawMsg):
 
 
     # filtering messages for future
-    filteredMsg = re.sub(EMOJIREGEX, "", rawMsg.content)
-    filteredMsg = filteredMsg.translate(str.maketrans("", "", "\"\',.:;?\\~"))
+    filteredMsgNoEmoji = re.sub(EMOJIREGEX, "", rawMsg.content)
+    filteredMsg = filteredMsgNoEmoji.translate(str.maketrans("", "", "\"\',.:;?\\~"))
     filteredMsgLow = filteredMsg.lower()
-    filteredMsgSet = set(filteredMsg.split())
+    filteredMsgSet = set(filteredMsgLow.split())
 
 
     # skips if message author is bot itself
@@ -86,7 +86,7 @@ async def on_message(rawMsg):
     if msgChannelID in translateGuilds:
         if (translator.detect(filteredMsg).lang != "en" and 
             not filteredMsgSet.intersection(phraseObj.UWUPROMPT)):
-            translateMsg = translator.translate(filteredMsg)
+            translateMsg = translator.translate(filteredMsgNoEmoji)
             translateMsgSrc = LANGUAGES.get(translateMsg.src)
             await rawMsg.reply(f"*From {translateMsgSrc}* \n>>> {translateMsg.text}", 
                                 mention_author=False)
