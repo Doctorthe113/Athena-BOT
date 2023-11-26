@@ -62,7 +62,7 @@ async def on_message(rawMsg):
     # filtering messages for future
     filteredMsg = re.sub(EMOJIREGEX, "", rawMsg.content)
     filteredMsg = filteredMsg.translate(str.maketrans("", "", "\"\',.:;?\\~"))
-    filteredMsgLow = rawMsg.content.lower()
+    filteredMsgLow = filteredMsg.lower()
     filteredMsgSet = set(filteredMsg.split())
 
 
