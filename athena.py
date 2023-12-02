@@ -1,6 +1,5 @@
 # built-in libraries
-import gc
-import os, json, re, threading, random, sys
+import os, json, re, threading, random
 # external libraries and apis
 import nextcord, psutil
 
