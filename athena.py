@@ -1,7 +1,9 @@
 # built-in libraries
+import asyncio
 import os
 import json
 import re
+from sys import exception
 import threading
 import random
 # external libraries and apis
@@ -10,20 +12,33 @@ import psutil
 
 from nextcord import Interaction
 from nextcord.ext import tasks
+from nextcord.voice_client import VoiceClient
 from googletrans import Translator, LANGUAGES
 from dotenv import load_dotenv
 from datetime import datetime
+
+import yt_dlp
 from phrases import phrase
 from extentions.web_search import webSearch
 from extentions.desco import descoAPI
 
-# loading global variables
 load_dotenv()
+
+# loading global variables
 TOKEN = os.getenv(key="TOKEN")
 APIKEY = os.getenv(key="googleApiKey")
 CSEID = os.getenv(key="searchEngineID")
 EMOJIREGEX = re.compile(pattern=(r"<:(\w+):(\d+)>"))
+URLREGEX = re.compile(
+    pattern=r"((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z]){2,6}([a-zA-Z0-9\.\&\/\?\:@\-_=#])*")
+PUNCREGEX = re.compile(pattern=r"[^\w\s.:]")
 LOGCHANNEL = None
+FFMPEGOPTIONS = {
+    'options': '-vn',
+    "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
+}
+vcs = {}
+queue = {}
 
 # loading differebnt classes and etcs
 intents = nextcord.Intents.default()
@@ -34,17 +49,33 @@ translator = Translator()
 phraseObj = phrase()
 webSearchObj = webSearch(apiKey=APIKEY, cseId=CSEID)
 
+ytdl = yt_dlp.YoutubeDL({"format": "bestaudio", "default-search": "ytsearch"})
+
+# def queueCheck():
+#     music = nextcord.FFmpegPCMAudio(
+#                     song, executable="ffmpeg", options="-vn")
+#     vcs[rawMsg.guild.id].play(music, after=queueCheck())
+#     queue[rawMsg.guild.id].pop(0)
+#     if len(queue[rawMsg.guild.id]) == 0:
+#         del queue[rawMsg.guild.id]
+#         vcs[rawMsg.guild.id].disconnect()
+
 
 @client.event
 async def on_ready():
     loginTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    global LOGCHANNEL
+    LOGCHANNEL = await client.fetch_channel(1115589968929239153)
+
     print(f"{loginTime}: Logged in as {client.user}")
     thread = threading.active_count()
     print(f"Current active thread count: {thread}")
 
-    global LOGCHANNEL, DOCID
-    LOGCHANNEL = await client.fetch_channel(1115589968929239153)
+    try:
+        await VoiceClient.disconnect(self=client)
+    except:
+        pass
 
 
 @client.event
@@ -61,10 +92,25 @@ async def on_message(rawMsg):
 
     # filtering messages for future
     filteredMsgNoEmoji = re.sub(EMOJIREGEX, "", rawMsg.content)
-    filteredMsg = filteredMsgNoEmoji.translate(
-        str.maketrans("", "", "\"\',.:;?\\~"))
+    filteredMsgNoURL = re.sub(URLREGEX, "", filteredMsgNoEmoji)
+    filteredMsg = re.sub(PUNCREGEX, "", filteredMsgNoURL)
     filteredMsgLow = filteredMsg.lower()
-    filteredMsgSet = set(filteredMsgLow.split())
+
+    # music queue function
+    async def queueCheck(error=None):
+        try:
+            if len(queue[vc.guild.id]) > 0:
+                queueSong = queue[vc.guild.id][0]
+                queueMusic = nextcord.FFmpegPCMAudio(queueSong, **FFMPEGOPTIONS)
+                queue[vc.guild.id].pop(0)
+                await vc.play(queueMusic, after=queueCheck)
+                print(1)
+            else:
+                await vc.disconnect()
+                del queue[rawMsg.guild.id]
+        except:
+            pass
+
 
     # skips if message author is bot itself
     if rawMsg.author == client.user:
@@ -81,8 +127,8 @@ async def on_message(rawMsg):
     # *For non-prompt/automated responses
     # translating messages
     if msgChannelID in translateGuilds:
-        if (translator.detect(filteredMsg).lang != "en" and
-                not filteredMsgSet.intersection(phraseObj.UWUPROMPT)):
+        if (translator.detect(filteredMsgLow).lang != "en" and
+                not set(filteredMsgLow.split()).intersection(phraseObj.UWUPROMPT)):
             translateMsg = translator.translate(filteredMsgNoEmoji)
             translateMsgSrc = LANGUAGES.get(translateMsg.src)
             await rawMsg.reply(f"*From {translateMsgSrc}* \n>>> {translateMsg.text}",
@@ -114,42 +160,36 @@ async def on_message(rawMsg):
     # dad joke ("hi x, im dad" type)
     if msgChannelID not in dadJokeGuilds:
         for i in phraseObj.DADPROMPT:
-            if randomChance != 2:
-                return None
-            if filteredMsgLow.startswith(i):
+            if randomChance == 2 and filteredMsgLow.startswith(i):
                 bar = filteredMsgLow.partition(i)[-1]
                 await rawMsg.reply(f"Hi, {bar}, I am Athena!", mention_author=False)
-                return None
 
     # uwu roasts
     if msgChannelID not in uwuGuilds:
         for i in phraseObj.UWUPROMPT:
-            if randomChance != 2:
-                return None
-            if i in filteredMsgLow:
+            if randomChance == 2 and i in filteredMsgLow:
                 bar = phraseObj.uwuRoastMethod()
                 await rawMsg.reply(bar)
-                return None
 
 
 # *Prompt based non-slash commands
     for prompt in phraseObj.PROMPT:
         # telling dad jokes
-        if (filteredMsgLow.startswith(f"{prompt} tell me a joke") or
-                filteredMsgLow.startswith(f"{prompt} tell me a dad joke")):
+        if (filteredMsgLow.startswith(f"{prompt}tell me a joke") or
+                filteredMsgLow.startswith(f"{prompt}tell me a dad joke")):
             await rawMsg.reply(phraseObj.dadJokeMethod())
             break
 
         # checking system
-        if filteredMsgLow.startswith(f"{prompt} check system"):
+        if filteredMsgLow.startswith(f"{prompt}check system"):
             thread = threading.active_count()
             process = psutil.Process(os.getpid())
-            memoryUsage = round(process.memory_info().rss / 1048576, 2)
+            memoryUsage = process.memory_info().rss / 1048576
             await rawMsg.reply(f"Thread: {thread}, Memory: {memoryUsage} MB")
             break
 
         # json validator
-        if filteredMsgLow.startswith(f"{prompt} validate this json"):
+        if filteredMsgLow.startswith(f"{prompt}validate this json"):
             jsonForCheck = re.sub(r"^```json\n|```$", "", rawMsg.content)
             try:
                 baz = json.loads(jsonForCheck)
@@ -159,25 +199,25 @@ async def on_message(rawMsg):
                 break
 
         # google search
-        if filteredMsgLow.startswith(f"{prompt} what is"):
-            query = re.sub(f"{prompt} what is", "",
+        if filteredMsgLow.startswith(f"{prompt}what is"):
+            query = re.sub(f"{prompt}what is", "",
                            rawMsg.content, flags=re.IGNORECASE)
             result = webSearchObj.google_search(query)
             await rawMsg.reply(result)
             break
 
-        if (filteredMsgLow.startswith(f"{prompt} search for") and
+        if (filteredMsgLow.startswith(f"{prompt}search for") and
                 filteredMsgLow.endswith("on google")):
-            query = re.sub(f"^{prompt} search for | on google$", "", rawMsg.content,
+            query = re.sub(f"^{prompt}search for | on google$", "", rawMsg.content,
                            flags=re.IGNORECASE)
             result = webSearchObj.google_search(query)
             await rawMsg.reply(result)
             break
 
         # wikipedia search
-        if (filteredMsgLow.startswith(f"{prompt} search for") and
+        if (filteredMsgLow.startswith(f"{prompt}search for") and
                 filteredMsgLow.endswith("on wikipedia")):
-            query = re.sub(f"^{prompt} search for | on wikipedia$", "", filteredMsg,
+            query = re.sub(f"^{prompt}search for | on wikipedia$", "", filteredMsg,
                            flags=re.IGNORECASE)
             wikiSummary = webSearchObj.wikiSearch(query)[0]
             relatedArticles = webSearchObj.wikiSearch(query)[1]
@@ -188,16 +228,16 @@ async def on_message(rawMsg):
             break
 
         # purging messages
-        if (filteredMsgLow.startswith(f"{prompt} purge") and
+        if (filteredMsgLow.startswith(f"{prompt}purge") and
                 rawMsg.author.guild_permissions.manage_messages):
-            numOfMsg = re.sub(f"{prompt} purge", "", filteredMsgLow)
+            numOfMsg = re.sub(f"{prompt}purge", "", filteredMsgLow)
             await rawMsg.message.channel.send(f"{numOfMsg} messages purged.")
             await rawMsg.channel.purge(limit=int(numOfMsg) + 2)
             break
 
         # defining words
-        if filteredMsgLow.startswith(f"{prompt} define"):
-            query = re.sub(f"{prompt} define", "", filteredMsg)
+        if filteredMsgLow.startswith(f"{prompt}define"):
+            query = re.sub(f"{prompt}define", "", filteredMsg)
             result = webSearchObj.dictionary(query)
             await rawMsg.reply(f"### {result[0]} \n" +
                                f"### {result[1]} \n" +
@@ -206,6 +246,67 @@ async def on_message(rawMsg):
                                f"__Definitions__:{result[4]}")
             break
 
+        # for playing music
+        if filteredMsgLow.startswith(f"{prompt}play"):
+            url = re.sub(f"{prompt}play", "",
+                         rawMsg.content, flags=re.IGNORECASE)
+            try:
+                vc = await rawMsg.author.voice.channel.connect()
+                vcs[vc.guild.id] = vc
+                queue[rawMsg.guild.id] = []
+            except:
+                await rawMsg.reply("Error joining the channel")
+            try:
+                data = ytdl.extract_info(url, download=False)
+                song = data["url"]
+                music = nextcord.FFmpegPCMAudio(song, **FFMPEGOPTIONS)
+                vc.play(music, after=queueCheck)
+            except nextcord.ClientException as e:
+                rawMsg.reply(f"An error has occured. {e}")
+            break
+
+        # adding music to queue:
+        if filteredMsgLow.startswith(f"{prompt}queue"):
+            url = re.sub(f"{prompt}queue", "",
+                         rawMsg.content, flags=re.IGNORECASE)
+            data = ytdl.extract_info(url, download=False)
+            song = data["url"]
+            queue[rawMsg.guild.id].append(song)
+            await rawMsg.reply("Added song to the queue")
+            break
+
+        # for pausing music
+        if filteredMsgLow.startswith(f"{prompt}pause"):
+            try:
+                vcs[rawMsg.guild.id].pause()
+            except nextcord.ClientException as e:
+                await rawMsg.reply("An error has occured.")
+            break
+
+        # for resuming music
+        if filteredMsgLow.startswith(f"{prompt}resume"):
+            try:
+                vcs[rawMsg.guild.id].resume()
+            except nextcord.ClientException as e:
+                await rawMsg.reply("An error occured.")
+            break
+
+        # for disconnecting/stopping music
+        if filteredMsgLow.startswith(f"{prompt}stop"):
+            try:
+                await vcs[rawMsg.guild.id].disconnect()
+                del queue[rawMsg.guild.id]
+            except nextcord.ClientException as e:
+                await rawMsg.reply(f"An error has occured. {e}")
+            break
+
+        # for checking queue
+        if filteredMsgLow.startswith(f"{prompt}check queue"):
+            try:
+                await rawMsg.reply(queue[rawMsg.guild.id])
+            except:
+                await rawMsg.reply("Queue is empty.")
+
         # replying to mentions
         if filteredMsgLow == prompt:
             await rawMsg.reply("Hey that's me! 🙋‍♀️")
@@ -213,7 +314,7 @@ async def on_message(rawMsg):
 
 
 # slash command for feedback:
-@client.slash_command(name="feedback", description="Let's you send feedback directly.")
+@client.slash_command(name="feedback", description="Send feedback directly.")
 async def feedback(interaction: Interaction, arg: str):
     FEEDBACKCHANNEL = await client.fetch_channel(1126220831496863786)
     userName = interaction.user.name
@@ -235,10 +336,6 @@ async def descoBalanceChecker():
         if int(balance) <= 250:
             await DOCID.send(f"Heyy, {balance}৳ Balance left in {i}. \n" +
                              f"This month's consumption upto today is {monthlyUse}৳.")
-
-# @descoBalanceChecker.before_loop
-# async def before_descoBalanceChecker(self):
-#     await self.bot.wait_until_ready()
 
 
 descoBalanceChecker.start()

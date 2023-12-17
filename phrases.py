@@ -2,14 +2,15 @@ import random
 class phrase():
     def __init__(self) -> None:
         self.PROMPT = (
-            "athena",
-            "hey athena",
-            "hi athena",
-            "hello athena", 
-            "sup athena",
-            "athena senpai",
-            "<@1085635807773208616>",
-            "$"
+            "athena ",
+            "hey athena ",
+            "hi athena ",
+            "hello athena ", 
+            "sup athena ",
+            "athena senpai ",
+            "<@1085635807773208616> ",
+            "$", # isnt supported yet
+            "?" # isnt supported yet
         )
         self.GREETINGPROMPT = (
             "hi",
