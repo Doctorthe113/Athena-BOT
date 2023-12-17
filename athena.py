@@ -9,15 +9,16 @@ import random
 # external libraries and apis
 import nextcord
 import psutil
+import yt_dlp
 
 from nextcord import Interaction
 from nextcord.ext import tasks
 from nextcord.voice_client import VoiceClient
 from googletrans import Translator, LANGUAGES
+from ytmusicapi import YTMusic
 from dotenv import load_dotenv
 from datetime import datetime
 
-import yt_dlp
 from phrases import phrase
 from extentions.web_search import webSearch
 from extentions.desco import descoAPI
@@ -246,6 +247,7 @@ async def on_message(rawMsg):
                                f"__Definitions__:{result[4]}")
             break
 
+        # !Needs to refactored because it's way too nested 😬 
         # for playing music
         if filteredMsgLow.startswith(f"{prompt}play"):
             url = re.sub(f"{prompt}play", "",
@@ -261,8 +263,15 @@ async def on_message(rawMsg):
                 song = data["url"]
                 music = nextcord.FFmpegPCMAudio(song, **FFMPEGOPTIONS)
                 vc.play(music, after=queueCheck)
-            except nextcord.ClientException as e:
-                rawMsg.reply(f"An error has occured. {e}")
+            except:
+                try:
+                    musicID = YTMusic().search(url)[1]["videoId"]
+                    data = ytdl.extract_info(musicID, download=False)
+                    song = data["url"]
+                    music = nextcord.FFmpegPCMAudio(song, **FFMPEGOPTIONS)
+                    vc.play(music, after=queueCheck)
+                except nextcord.ClientException as e:
+                    rawMsg.reply(f"An error has occured. {e}")
             break
 
         # adding music to queue:
