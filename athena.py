@@ -50,15 +50,6 @@ webSearchObj = webSearch(apiKey=API_KEY, cseId=CSE_ID)
 
 ytdl = yt_dlp.YoutubeDL({"format": "bestaudio"})
 
-# def queueCheck():
-#     music = nextcord.FFmpegPCMAudio(
-#                     song, executable="ffmpeg", options="-vn")
-#     vcs[rawMsg.guild.id].play(music, after=queueCheck())
-#     queue[rawMsg.guild.id].pop(0)
-#     if len(queue[rawMsg.guild.id]) == 0:
-#         del queue[rawMsg.guild.id]
-#         vcs[rawMsg.guild.id].disconnect()
-
 
 @client.event
 async def on_ready():
@@ -96,7 +87,7 @@ async def on_message(rawMsg):
     filteredMsgLow = filteredMsg.lower()
 
     # music queue function
-    async def queueCheck(error=None):
+    async def queue_check(error=None):
         try:
             if len(queue[vc.guild.id][0]) > 0:
                 queueSong = queue[vc.guild.id][0][0]
@@ -104,7 +95,7 @@ async def on_message(rawMsg):
                 queue[vc.guild.id][0].pop(0)
                 queue[vc.guild.id][1].pop(0)
                 print(queue)
-                await vc.play(queueMusic, after=queueCheck)
+                await vc.play(queueMusic, after=queue_check)
             else:
                 await vc.disconnect()
                 del queue[rawMsg.guild.id]
@@ -261,7 +252,7 @@ async def on_message(rawMsg):
                 data = ytdl.extract_info(url, download=False)
                 song = data["url"]
                 music = nextcord.FFmpegPCMAudio(song, **FFMPEG_OPTIONS)
-                vc.play(music, after=queueCheck)
+                vc.play(music, after=queue_check)
             except:
                 try:
                     musicId = YTMusic().search(url, "songs")[0]["videoId"]
@@ -269,7 +260,7 @@ async def on_message(rawMsg):
                     song = data["url"]
                     title = data["title"]
                     music = nextcord.FFmpegPCMAudio(song, **FFMPEG_OPTIONS)
-                    vc.play(music, after=queueCheck)
+                    vc.play(music, after=queue_check)
                     await rawMsg.reply(f"Now playing {title}")
                 except nextcord.ClientException as e:
                     rawMsg.reply(f"An error has occured. {e}")
