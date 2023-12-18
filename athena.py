@@ -1,9 +1,7 @@
 # built-in libraries
-import asyncio
 import os
 import json
 import re
-from sys import exception
 import threading
 import random
 # external libraries and apis
@@ -27,14 +25,14 @@ load_dotenv()
 
 # loading global variables
 TOKEN = os.getenv(key="TOKEN")
-APIKEY = os.getenv(key="googleApiKey")
-CSEID = os.getenv(key="searchEngineID")
-EMOJIREGEX = re.compile(pattern=(r"<:(\w+):(\d+)>"))
-URLREGEX = re.compile(
+API_KEY = os.getenv(key="googleApiKey")
+CSE_ID = os.getenv(key="searchEngineId")
+EMOJI_REGEX = re.compile(pattern=(r"<:(\w+):(\d+)>"))
+URL_REGEX = re.compile(
     pattern=r"((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z]){2,6}([a-zA-Z0-9\.\&\/\?\:@\-_=#])*")
-PUNCREGEX = re.compile(pattern=r"[^\w\s.:]")
-LOGCHANNEL = None
-FFMPEGOPTIONS = {
+PUNC_REGEX = re.compile(pattern=r"[^\w\s.:]")
+LOG_CHANNEL = None
+FFMPEG_OPTIONS = {
     'options': '-vn',
     "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
 }
@@ -48,9 +46,9 @@ client = nextcord.Client(intents=intents)
 
 translator = Translator()
 phraseObj = phrase()
-webSearchObj = webSearch(apiKey=APIKEY, cseId=CSEID)
+webSearchObj = webSearch(apiKey=API_KEY, cseId=CSE_ID)
 
-ytdl = yt_dlp.YoutubeDL({"format": "bestaudio", "default-search": "ytsearch"})
+ytdl = yt_dlp.YoutubeDL({"format": "bestaudio"})
 
 # def queueCheck():
 #     music = nextcord.FFmpegPCMAudio(
@@ -66,8 +64,8 @@ ytdl = yt_dlp.YoutubeDL({"format": "bestaudio", "default-search": "ytsearch"})
 async def on_ready():
     loginTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    global LOGCHANNEL
-    LOGCHANNEL = await client.fetch_channel(1115589968929239153)
+    global LOG_CHANNEL
+    LOG_CHANNEL = await client.fetch_channel(1115589968929239153)
 
     print(f"{loginTime}: Logged in as {client.user}")
     thread = threading.active_count()
@@ -88,24 +86,25 @@ async def on_message(rawMsg):
     uwuGuilds = guilds["uwuPrompts"]
 
     currentTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    msgChannelID = rawMsg.channel.id
+    msgChannelId = rawMsg.channel.id
     randomChance = random.randint(1, 3)
 
     # filtering messages for future
-    filteredMsgNoEmoji = re.sub(EMOJIREGEX, "", rawMsg.content)
-    filteredMsgNoURL = re.sub(URLREGEX, "", filteredMsgNoEmoji)
-    filteredMsg = re.sub(PUNCREGEX, "", filteredMsgNoURL)
+    filteredMsgNoEmoji = re.sub(EMOJI_REGEX, "", rawMsg.content)
+    filteredMsgNoURL = re.sub(URL_REGEX, "", filteredMsgNoEmoji)
+    filteredMsg = re.sub(PUNC_REGEX, "", filteredMsgNoURL)
     filteredMsgLow = filteredMsg.lower()
 
     # music queue function
     async def queueCheck(error=None):
         try:
-            if len(queue[vc.guild.id]) > 0:
-                queueSong = queue[vc.guild.id][0]
-                queueMusic = nextcord.FFmpegPCMAudio(queueSong, **FFMPEGOPTIONS)
-                queue[vc.guild.id].pop(0)
+            if len(queue[vc.guild.id][0]) > 0:
+                queueSong = queue[vc.guild.id][0][0]
+                queueMusic = nextcord.FFmpegPCMAudio(queueSong, **FFMPEG_OPTIONS)
+                queue[vc.guild.id][0].pop(0)
+                queue[vc.guild.id][1].pop(0)
+                print(queue)
                 await vc.play(queueMusic, after=queueCheck)
-                print(1)
             else:
                 await vc.disconnect()
                 del queue[rawMsg.guild.id]
@@ -122,12 +121,12 @@ async def on_message(rawMsg):
         return None
 
     # logging messages
-    if rawMsg.channel != LOGCHANNEL:
-        await LOGCHANNEL.send(f"{currentTime}: {rawMsg.author.name} -> {rawMsg.content}")
+    if rawMsg.channel != LOG_CHANNEL:
+        await LOG_CHANNEL.send(f"{currentTime}: {rawMsg.author.name} -> {rawMsg.content}")
 
     # *For non-prompt/automated responses
     # translating messages
-    if msgChannelID in translateGuilds:
+    if msgChannelId in translateGuilds:
         if (translator.detect(filteredMsgLow).lang != "en" and
                 not set(filteredMsgLow.split()).intersection(phraseObj.UWUPROMPT)):
             translateMsg = translator.translate(filteredMsgNoEmoji)
@@ -159,14 +158,14 @@ async def on_message(rawMsg):
         return None
 
     # dad joke ("hi x, im dad" type)
-    if msgChannelID not in dadJokeGuilds:
+    if msgChannelId not in dadJokeGuilds:
         for i in phraseObj.DADPROMPT:
             if randomChance == 2 and filteredMsgLow.startswith(i):
                 bar = filteredMsgLow.partition(i)[-1]
                 await rawMsg.reply(f"Hi, {bar}, I am Athena!", mention_author=False)
 
     # uwu roasts
-    if msgChannelID not in uwuGuilds:
+    if msgChannelId not in uwuGuilds:
         for i in phraseObj.UWUPROMPT:
             if randomChance == 2 and i in filteredMsgLow:
                 bar = phraseObj.uwuRoastMethod()
@@ -255,21 +254,23 @@ async def on_message(rawMsg):
             try:
                 vc = await rawMsg.author.voice.channel.connect()
                 vcs[vc.guild.id] = vc
-                queue[rawMsg.guild.id] = []
-            except:
-                await rawMsg.reply("Error joining the channel")
+                queue[rawMsg.guild.id] = [[],[]]
+            except nextcord.ClientException as e:
+                await rawMsg.reply(f"Error joining the channel. {e}")
             try:
                 data = ytdl.extract_info(url, download=False)
                 song = data["url"]
-                music = nextcord.FFmpegPCMAudio(song, **FFMPEGOPTIONS)
+                music = nextcord.FFmpegPCMAudio(song, **FFMPEG_OPTIONS)
                 vc.play(music, after=queueCheck)
             except:
                 try:
-                    musicID = YTMusic().search(url)[1]["videoId"]
-                    data = ytdl.extract_info(musicID, download=False)
+                    musicId = YTMusic().search(url, "songs")[0]["videoId"]
+                    data = ytdl.extract_info(musicId, download=False)
                     song = data["url"]
-                    music = nextcord.FFmpegPCMAudio(song, **FFMPEGOPTIONS)
+                    title = data["title"]
+                    music = nextcord.FFmpegPCMAudio(song, **FFMPEG_OPTIONS)
                     vc.play(music, after=queueCheck)
+                    await rawMsg.reply(f"Now playing {title}")
                 except nextcord.ClientException as e:
                     rawMsg.reply(f"An error has occured. {e}")
             break
@@ -278,10 +279,16 @@ async def on_message(rawMsg):
         if filteredMsgLow.startswith(f"{prompt}queue"):
             url = re.sub(f"{prompt}queue", "",
                          rawMsg.content, flags=re.IGNORECASE)
-            data = ytdl.extract_info(url, download=False)
+            try:
+                data = ytdl.extract_info(url, download=False)
+            except:
+                musicId = YTMusic().search(url, "songs")[0]["videoId"]
+                data = ytdl.extract_info(musicId, download=False)
             song = data["url"]
-            queue[rawMsg.guild.id].append(song)
-            await rawMsg.reply("Added song to the queue")
+            title = data["title"]
+            queue[rawMsg.guild.id][0].append(song)
+            queue[rawMsg.guild.id][1].append(title)
+            await rawMsg.reply(f"Added {title} to the queue")
             break
 
         # for pausing music
@@ -312,7 +319,8 @@ async def on_message(rawMsg):
         # for checking queue
         if filteredMsgLow.startswith(f"{prompt}check queue"):
             try:
-                await rawMsg.reply(queue[rawMsg.guild.id])
+                queueList = chr(10).join(queue[rawMsg.guild.id][1])
+                await rawMsg.reply(f"```{queueList}```")
             except:
                 await rawMsg.reply("Queue is empty.")
 
@@ -337,15 +345,15 @@ async def feedback(interaction: Interaction, arg: str):
 
 # check my electric meter balance
 @tasks.loop(hours=12)
-async def descoBalanceChecker():
-    DOCID = await client.fetch_user(699342617095438479)
+async def desco_balance_checker():
+    DOCId = await client.fetch_user(699342617095438479)
     for i in (12021574, 12021575):
         balance = descoAPI(i).balanceCheck()["balance"]
         monthlyUse = descoAPI(i).balanceCheck()["currentMonthConsumption"]
         if int(balance) <= 250:
-            await DOCID.send(f"Heyy, {balance}৳ Balance left in {i}. \n" +
+            await DOCId.send(f"Heyy, {balance}৳ Balance left in {i}. \n" +
                              f"This month's consumption upto today is {monthlyUse}৳.")
 
 
-descoBalanceChecker.start()
+desco_balance_checker.start()
 client.run(TOKEN)
