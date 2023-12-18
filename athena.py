@@ -320,7 +320,7 @@ async def on_message(rawMsg):
         if filteredMsgLow.startswith(f"{prompt}check queue"):
             try:
                 queueList = chr(10).join(queue[rawMsg.guild.id][1])
-                await rawMsg.reply(f"```{queueList}```")
+                await rawMsg.reply(f"```\n{queueList}```")
             except:
                 await rawMsg.reply("Queue is empty.")
 
