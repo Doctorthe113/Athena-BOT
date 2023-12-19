@@ -94,7 +94,6 @@ async def on_message(rawMsg):
                 queueMusic = nextcord.FFmpegPCMAudio(queueSong, **FFMPEG_OPTIONS)
                 queue[vc.guild.id][0].pop(0)
                 queue[vc.guild.id][1].pop(0)
-                print(queue)
                 await vc.play(queueMusic, after=queue_check)
             else:
                 await vc.disconnect()
@@ -165,6 +164,10 @@ async def on_message(rawMsg):
 
 # *Prompt based non-slash commands
     for prompt in phraseObj.PROMPT:
+        # for skipping iterations
+        if prompt not in filteredMsgLow:
+            continue
+
         # telling dad jokes
         if (filteredMsgLow.startswith(f"{prompt}tell me a joke") or
                 filteredMsgLow.startswith(f"{prompt}tell me a dad joke")):
@@ -237,7 +240,7 @@ async def on_message(rawMsg):
                                f"__Definitions__:{result[4]}")
             break
 
-        # !Needs to refactored because it's way too nested 😬 
+        # !Needs to refactored because it's way too ugly 😬 
         # for playing music
         if filteredMsgLow.startswith(f"{prompt}play"):
             url = re.sub(f"{prompt}play", "",
@@ -251,19 +254,23 @@ async def on_message(rawMsg):
             try:
                 data = ytdl.extract_info(url, download=False)
                 song = data["url"]
+                title = data["title"]
                 music = nextcord.FFmpegPCMAudio(song, **FFMPEG_OPTIONS)
                 vc.play(music, after=queue_check)
+                await rawMsg.reply(f"Now playing {title}")
+                break
             except:
-                try:
-                    musicId = YTMusic().search(url, "songs")[0]["videoId"]
-                    data = ytdl.extract_info(musicId, download=False)
-                    song = data["url"]
-                    title = data["title"]
-                    music = nextcord.FFmpegPCMAudio(song, **FFMPEG_OPTIONS)
-                    vc.play(music, after=queue_check)
-                    await rawMsg.reply(f"Now playing {title}")
-                except nextcord.ClientException as e:
-                    rawMsg.reply(f"An error has occured. {e}")
+                pass
+            try:
+                musicId = YTMusic().search(url, "songs")[0]["videoId"]
+                data = ytdl.extract_info(musicId, download=False)
+                song = data["url"]
+                title = data["title"]
+                music = nextcord.FFmpegPCMAudio(song, **FFMPEG_OPTIONS)
+                vc.play(music, after=queue_check)
+                await rawMsg.reply(f"Now playing {title}")
+            except nextcord.ClientException as e:
+                await rawMsg.reply(f"An error has occured. {e}")
             break
 
         # adding music to queue:
