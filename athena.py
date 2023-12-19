@@ -91,7 +91,8 @@ async def on_message(rawMsg):
         try:
             if len(queue[vc.guild.id][0]) > 0:
                 queueSong = queue[vc.guild.id][0][0]
-                queueMusic = nextcord.FFmpegPCMAudio(queueSong, **FFMPEG_OPTIONS)
+                queueMusic = nextcord.FFmpegPCMAudio(
+                    queueSong, **FFMPEG_OPTIONS)
                 queue[vc.guild.id][0].pop(0)
                 queue[vc.guild.id][1].pop(0)
                 await vc.play(queueMusic, after=queue_check)
@@ -100,7 +101,6 @@ async def on_message(rawMsg):
                 del queue[rawMsg.guild.id]
         except:
             pass
-
 
     # skips if message author is bot itself
     if rawMsg.author == client.user:
@@ -240,7 +240,7 @@ async def on_message(rawMsg):
                                f"__Definitions__:{result[4]}")
             break
 
-        # !Needs to refactored because it's way too ugly 😬 
+        # !Needs to refactored because it's way too ugly  
         # for playing music
         if filteredMsgLow.startswith(f"{prompt}play"):
             url = re.sub(f"{prompt}play", "",
@@ -248,7 +248,7 @@ async def on_message(rawMsg):
             try:
                 vc = await rawMsg.author.voice.channel.connect()
                 vcs[vc.guild.id] = vc
-                queue[rawMsg.guild.id] = [[],[]]
+                queue[rawMsg.guild.id] = [[], []]
             except nextcord.ClientException as e:
                 await rawMsg.reply(f"Error joining the channel. {e}")
             try:
