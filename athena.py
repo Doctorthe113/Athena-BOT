@@ -11,7 +11,6 @@ import yt_dlp
 
 from nextcord import Interaction
 from nextcord.ext import tasks
-from nextcord.voice_client import VoiceClient
 from googletrans import Translator, LANGUAGES
 from ytmusicapi import YTMusic
 from dotenv import load_dotenv
@@ -62,11 +61,6 @@ async def on_ready():
     thread = threading.active_count()
     print(f"Current active thread count: {thread}")
 
-    try:
-        await VoiceClient.disconnect(self=client)
-    except:
-        pass
-
 
 @client.event
 async def on_message(rawMsg):
@@ -86,6 +80,7 @@ async def on_message(rawMsg):
     filteredMsg = re.sub(PUNC_REGEX, "", filteredMsgNoURL)
     filteredMsgLow = filteredMsg.lower()
 
+
     # music queue function
     async def queue_check(error=None):
         try:
@@ -98,9 +93,12 @@ async def on_message(rawMsg):
                 await vc.play(queueMusic, after=queue_check)
             else:
                 await vc.disconnect()
-                del queue[rawMsg.guild.id]
-        except:
-            pass
+                del queue[vc.guild.id]
+        except:   
+                print(f"An error has occured. {e}")
+                await vc.disconnect()
+                del queue[vc.guild.id]
+
 
     # skips if message author is bot itself
     if rawMsg.author == client.user:
@@ -123,7 +121,6 @@ async def on_message(rawMsg):
             translateMsgSrc = LANGUAGES.get(translateMsg.src)
             await rawMsg.reply(f"*From {translateMsgSrc}* \n>>> {translateMsg.text}",
                                mention_author=False)
-            return None
 
     # saying hi/hello
     if filteredMsgLow.startswith(phraseObj.GREETINGPROMPT):
@@ -297,6 +294,22 @@ async def on_message(rawMsg):
                 await rawMsg.reply("An error has occured.")
             break
 
+        # for skipping music
+        if filteredMsgLow.startswith(f"{prompt}skip"):
+            try:
+                vcs[rawMsg.guild.id].pause()
+                vc = vcs[rawMsg.guild.id]
+                nextSong = queue[rawMsg.guild.id][0][0]
+                nextMusic = nextcord.FFmpegPCMAudio(
+                    nextSong, **FFMPEG_OPTIONS)
+                await rawMsg.reply(f"Skipped to {queue[rawMsg.guild.id][1][0]}.")
+                queue[rawMsg.guild.id][0].pop(0)
+                queue[rawMsg.guild.id][1].pop(0)
+                vc.play(nextMusic, after=queue_check)
+            except:
+                await rawMsg.reply("An error has occured.")
+            break
+
         # for resuming music
         if filteredMsgLow.startswith(f"{prompt}resume"):
             try:
@@ -310,8 +323,8 @@ async def on_message(rawMsg):
             try:
                 await vcs[rawMsg.guild.id].disconnect()
                 del queue[rawMsg.guild.id]
-            except nextcord.ClientException as e:
-                await rawMsg.reply(f"An error has occured. {e}")
+            except:
+                await rawMsg.reply("An error has occured.")
             break
 
         # for checking queue
