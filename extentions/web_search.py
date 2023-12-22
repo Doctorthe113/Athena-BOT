@@ -33,7 +33,7 @@ class webSearch():
         vocub = requests.get(self.dictionaryApi + query).json()
         word = vocub[0]["word"]
         pronounciation = vocub[0]["phonetics"][0].get("audio", "unknown")
-        phonetics = vocub[0]["phonetics"][1].get("text", "unknown")
+        phonetics = vocub[0]["phonetics"][0].get("text", "unknown")
         origin = vocub[0].get("origin", "unknown")
         meanings = vocub[0]["meanings"]
         definition = ""
