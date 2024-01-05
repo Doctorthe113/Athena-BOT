@@ -1,4 +1,5 @@
 # built-in libraries
+import io
 import os
 import json
 import re
@@ -7,6 +8,7 @@ import random
 # external libraries and apis
 import nextcord
 import psutil
+import requests
 import yt_dlp
 
 from nextcord import Interaction
@@ -47,7 +49,7 @@ translator = Translator()
 phraseObj = phrase()
 webSearchObj = webSearch(apiKey=API_KEY, cseId=CSE_ID)
 
-ytdl = yt_dlp.YoutubeDL({"format": "bestaudio"})
+ytdlMusic = yt_dlp.YoutubeDL({"format": "bestaudio"})
 
 
 @client.event
@@ -222,7 +224,7 @@ async def on_message(rawMsg):
         if (filteredMsgLow.startswith(f"{prompt}purge") and
                 rawMsg.author.guild_permissions.manage_messages):
             numOfMsg = re.sub(f"{prompt}purge", "", filteredMsgLow)
-            await rawMsg.message.channel.send(f"{numOfMsg} messages purged.")
+            await rawMsg.channel.send(f"{numOfMsg} messages purged.")
             await rawMsg.channel.purge(limit=int(numOfMsg) + 2)
             break
 
@@ -249,7 +251,7 @@ async def on_message(rawMsg):
             except nextcord.ClientException as e:
                 await rawMsg.reply(f"Error joining the channel. {e}")
             try:
-                data = ytdl.extract_info(url, download=False)
+                data = ytdlMusic.extract_info(url, download=False)
                 song = data["url"]
                 title = data["title"]
                 music = nextcord.FFmpegPCMAudio(song, **FFMPEG_OPTIONS)
@@ -260,7 +262,7 @@ async def on_message(rawMsg):
                 pass
             try:
                 musicId = YTMusic().search(url, "songs")[0]["videoId"]
-                data = ytdl.extract_info(musicId, download=False)
+                data = ytdlMusic.extract_info(musicId, download=False)
                 song = data["url"]
                 title = data["title"]
                 music = nextcord.FFmpegPCMAudio(song, **FFMPEG_OPTIONS)
@@ -275,10 +277,10 @@ async def on_message(rawMsg):
             url = re.sub(f"{prompt}queue", "",
                          rawMsg.content, flags=re.IGNORECASE)
             try:
-                data = ytdl.extract_info(url, download=False)
+                data = ytdlMusic.extract_info(url, download=False)
             except:
                 musicId = YTMusic().search(url, "songs")[0]["videoId"]
-                data = ytdl.extract_info(musicId, download=False)
+                data = ytdlMusic.extract_info(musicId, download=False)
             song = data["url"]
             title = data["title"]
             queue[rawMsg.guild.id][0].append(song)
@@ -334,6 +336,22 @@ async def on_message(rawMsg):
                 await rawMsg.reply(f"```\n{queueList}```")
             except:
                 await rawMsg.reply("Queue is empty.")
+
+        # for downloading videos
+        if filteredMsgLow.startswith(f"{prompt}download"):
+            query = re.sub(f"{prompt}download", "",rawMsg.content, flags=re.IGNORECASE)
+            ytdlVid = yt_dlp.YoutubeDL({"format": "best", "quiet": True})
+            data = ytdlVid.extract_info(query, download=False)
+            url = data["url"]
+            await rawMsg.reply("Downloading...")
+            try:
+                response = requests.get(url, timeout=13, stream=True)
+                content = response.content
+                videoBinary = io.BytesIO(content)
+                video = nextcord.File(videoBinary, filename="video.mp4")
+                await rawMsg.channel.send(file=video)
+            except:
+                await rawMsg.channel.send("An error has occured.")
 
         # replying to mentions
         if filteredMsgLow == prompt:

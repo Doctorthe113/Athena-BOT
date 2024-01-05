@@ -1,4 +1,3 @@
-from unittest import result
 import wikipedia
 import requests
 from googleapiclient.discovery import build
@@ -15,8 +14,11 @@ class webSearch():
         service = build("customsearch", "v1", developerKey=self.APIKEY, static_discovery=False).cse()
         result = service.list(q=query, cx=self.CSEID, safe="high").execute()
         searchResult = ""
-        for i in range(0, 6):
-            searchResult += "\n""- " + result["items"][i]["snippet"] + "\n" + "<" + result["items"][i]["link"] + ">"
+        try:
+            for i in range(0, 6):
+                searchResult += "\n""- " + result["items"][i]["snippet"] + "\n" + "<" + result["items"][i]["link"] + ">"
+        except:
+            searchResult = "No results found"
         return searchResult
 
 
