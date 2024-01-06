@@ -31,7 +31,7 @@ CSE_ID = os.getenv(key="searchEngineId")
 EMOJI_REGEX = re.compile(pattern=(r"<:(\w+):(\d+)>"))
 URL_REGEX = re.compile(
     pattern=r"((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z]){2,6}([a-zA-Z0-9\.\&\/\?\:@\-_=#])*")
-PUNC_REGEX = re.compile(pattern=r"[^\w\s.:]")
+PUNC_REGEX = re.compile(r"(?<!\A)[^\w\s]")
 LOG_CHANNEL = None
 FFMPEG_OPTIONS = {
     'options': '-vn',
@@ -82,7 +82,6 @@ async def on_message(rawMsg):
     filteredMsg = re.sub(PUNC_REGEX, "", filteredMsgNoURL)
     filteredMsgLow = filteredMsg.lower()
 
-
     # music queue function
     async def queue_check(error=None):
         try:
@@ -96,11 +95,10 @@ async def on_message(rawMsg):
             else:
                 await vc.disconnect()
                 del queue[vc.guild.id]
-        except:   
-                print(f"An error has occured. {e}")
-                await vc.disconnect()
-                del queue[vc.guild.id]
-
+        except:
+            print(f"An error has occured. {e}")
+            await vc.disconnect()
+            del queue[vc.guild.id]
 
     # skips if message author is bot itself
     if rawMsg.author == client.user:
@@ -125,7 +123,7 @@ async def on_message(rawMsg):
                                mention_author=False)
 
     # saying hi/hello
-    if filteredMsgLow.startswith(phraseObj.GREETINGPROMPT):
+    if filteredMsgLow == phraseObj.GREETINGPROMPT:
         greet = phraseObj.greetingMethod()
         await rawMsg.channel.send(greet)
 
@@ -239,7 +237,7 @@ async def on_message(rawMsg):
                                f"__Definitions__:{result[4]}")
             break
 
-        # !Needs to refactored because it's way too ugly  
+        # !Needs to refactored because it's way too ugly
         # for playing music
         if filteredMsgLow.startswith(f"{prompt}play"):
             url = re.sub(f"{prompt}play", "",
@@ -339,8 +337,10 @@ async def on_message(rawMsg):
 
         # for downloading videos
         if filteredMsgLow.startswith(f"{prompt}download"):
-            query = re.sub(f"{prompt}download", "",rawMsg.content, flags=re.IGNORECASE)
-            ytdlVid = yt_dlp.YoutubeDL({"format": "best", "quiet": True})
+            query = re.sub(f"{prompt}download", "",
+                            rawMsg.content, flags=re.IGNORECASE)
+            ytdlVid = yt_dlp.YoutubeDL(
+                {"format": "best", "outtml": "-", "quiet": True})
             data = ytdlVid.extract_info(query, download=False)
             url = data["url"]
             await rawMsg.reply("Downloading...")
@@ -350,8 +350,11 @@ async def on_message(rawMsg):
                 videoBinary = io.BytesIO(content)
                 video = nextcord.File(videoBinary, filename="video.mp4")
                 await rawMsg.channel.send(file=video)
-            except:
-                await rawMsg.channel.send("An error has occured.")
+            except (nextcord.errors.HTTPException,
+                    nextcord.errors.Forbidden, 
+                    requests.exceptions.Timeout, 
+                    requests.exceptions.HTTPError) as e:
+                await rawMsg.channel.send(f"An error has occured. {e}")
 
         # replying to mentions
         if filteredMsgLow == prompt:
@@ -385,4 +388,7 @@ async def desco_balance_checker():
 
 
 desco_balance_checker.start()
+# before = psutil.disk_io_counters()
 client.run(TOKEN)
+# after = psutil.disk_io_counters()
+# print(after.write_bytes - before.write_bytes)
