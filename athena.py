@@ -75,7 +75,7 @@ async def on_message(rawMsg):
 
     currentTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     msgChannelId = rawMsg.channel.id
-    randomChance = random.randint(1, 3)
+    randomChance = random.randint(1, 10)
 
     # filtering messages for future
     filteredMsgNoEmoji = re.sub(EMOJI_REGEX, "", rawMsg.content)
