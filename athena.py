@@ -1,4 +1,5 @@
 # built-in libraries
+import asyncio
 import io
 import os
 import json
@@ -115,12 +116,26 @@ async def on_message(rawMsg):
     # *For non-prompt/automated responses
     # translating messages
     if msgChannelId in translateGuilds:
-        if (translator.detect(filteredMsgLow).lang != "en" and
+        if (translator.detect(filteredMsgNoURL).lang != "en" and
                 not set(filteredMsgLow.split()).intersection(phraseObj.UWUPROMPT)):
-            translateMsg = translator.translate(filteredMsgNoEmoji)
-            translateMsgSrc = LANGUAGES.get(translateMsg.src)
-            await rawMsg.reply(f"*From {translateMsgSrc}* \n>>> {translateMsg.text}",
-                               mention_author=False)
+            translation = translator.translate(filteredMsgNoURL)
+            translationSrc = LANGUAGES.get(translation.src)
+            message = await rawMsg.reply(f"*__From {translationSrc}__*" +
+                                         f"\n>>> {translation.text}",
+                                         mention_author=False)
+            await message.add_reaction("❌")
+            def check(reaction, user):
+                return user == rawMsg.author and str(reaction.emoji) == "❌"
+            try:
+                reaction, user = await client.wait_for('reaction_add',
+                                                       timeout=60.0, 
+                                                       check=check)
+                print(f"User {user} reacted with {reaction.emoji}")
+                await message.delete()
+            except nextcord.errors.Forbidden as e:
+                await message.channel.send(f"Error deleting the message: {e}")
+            except asyncio.TimeoutError:
+                pass
 
     # saying hi/hello
     if filteredMsgLow == phraseObj.GREETINGPROMPT:
@@ -369,6 +384,7 @@ async def feedback(interaction: Interaction, arg: str):
     userName = interaction.user.name
     try:
         await FEEDBACKCHANNEL.send(f"From {userName}, \n{arg}")
+        await interaction.response.send_message("Feedback sent!", ephemeral=True)
     except (nextcord.errors.ApplicationInvokeError, nextcord.errors.Forbidden,
             nextcord.errors.HTTPException) as e:
         await interaction.response.send_message(f"Feedback couldn't be sent. Error: \n" +
