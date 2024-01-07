@@ -125,7 +125,9 @@ async def on_message(rawMsg):
                                          mention_author=False)
             await message.add_reaction("❌")
             def check(reaction, user):
-                return user == rawMsg.author and str(reaction.emoji) == "❌"
+                return (user == rawMsg.author and
+                        str(reaction.emoji) == "❌" and
+                        reaction.message.id == message.id)
             try:
                 reaction, user = await client.wait_for('reaction_add',
                                                        timeout=60.0, 
