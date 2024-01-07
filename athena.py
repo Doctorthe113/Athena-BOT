@@ -130,7 +130,6 @@ async def on_message(rawMsg):
                 reaction, user = await client.wait_for('reaction_add',
                                                        timeout=60.0, 
                                                        check=check)
-                print(f"User {user} reacted with {reaction.emoji}")
                 await message.delete()
             except nextcord.errors.Forbidden as e:
                 await message.channel.send(f"Error deleting the message: {e}")
