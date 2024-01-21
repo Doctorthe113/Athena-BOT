@@ -114,6 +114,7 @@ async def on_message(rawMsg):
         await LOG_CHANNEL.send(f"{currentTime}: {rawMsg.author.name} -> {rawMsg.content}")
 
     # *For non-prompt/automated responses
+    # !Needs to refactored because it's way too ugly
     # translating messages
     if msgChannelId in translateGuilds:
         if (translator.detect(filteredMsgNoURL).lang != "en" and
@@ -121,7 +122,8 @@ async def on_message(rawMsg):
             translation = translator.translate(filteredMsgNoURL)
             translationSrc = LANGUAGES.get(translation.src)
             message = await rawMsg.reply(f"*__From {translationSrc}__*" +
-                                         f"\n>>> {translation.text}",
+                                         f"\n>>> {translation.text}" +
+                                         f"\n(*React with ❌ to delete the message.*)",
                                          mention_author=False)
             await message.add_reaction("❌")
             def check(reaction, user):
