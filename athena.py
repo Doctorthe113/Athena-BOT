@@ -122,10 +122,12 @@ async def on_message(rawMsg):
             translation = translator.translate(filteredMsgNoURL)
             translationSrc = LANGUAGES.get(translation.src)
             message = await rawMsg.reply(f"*__From {translationSrc}__*" +
-                                         f"\n>>> {translation.text}" +
-                                         f"\n(*React with ❌ to delete the message.*)",
+                                         f"\n>>> {translation.text}",
                                          mention_author=False)
             await message.add_reaction("❌")
+            if randomChance == 2:
+                await message.reply("(*React with ❌ to delete wrong translations*)",
+                                    mention_author=False)
             def check(reaction, user):
                 return (user == rawMsg.author and
                         str(reaction.emoji) == "❌" and
