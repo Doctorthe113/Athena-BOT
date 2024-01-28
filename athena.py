@@ -1,6 +1,7 @@
 # built-in libraries
 import asyncio
 import io
+from itertools import cycle
 import os
 import json
 import re
@@ -19,13 +20,19 @@ from ytmusicapi import YTMusic
 from dotenv import load_dotenv
 from datetime import datetime
 
-from phrases import phrase
+from extentions.phrases import phrase
 from extentions.web_search import webSearch
 from extentions.desco import descoAPI
+from extentions.keep_alive import keep_alive
 
 load_dotenv()
 
 # loading global variables
+LOG_CHANNEL = None
+STATUES = cycle([
+    "hello bbg <a:duckDance:1166434908609196192>", 
+    "in your walls 👀",
+    "hira chan my beloved 😍"])
 TOKEN = os.getenv(key="TOKEN")
 API_KEY = os.getenv(key="googleApiKey")
 CSE_ID = os.getenv(key="searchEngineId")
@@ -33,7 +40,6 @@ EMOJI_REGEX = re.compile(pattern=(r"<:(\w+):(\d+)>"))
 URL_REGEX = re.compile(
     pattern=r"((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z]){2,6}([a-zA-Z0-9\.\&\/\?\:@\-_=#])*")
 PUNC_REGEX = re.compile(r"(?<!\A)[^\w\s]")
-LOG_CHANNEL = None
 FFMPEG_OPTIONS = {
     'options': '-vn',
     "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
@@ -128,13 +134,14 @@ async def on_message(rawMsg):
             if randomChance == 2:
                 await message.reply("(*React with ❌ to delete wrong translations*)",
                                     mention_author=False)
+
             def check(reaction, user):
                 return (user == rawMsg.author and
                         str(reaction.emoji) == "❌" and
                         reaction.message.id == message.id)
             try:
                 reaction, user = await client.wait_for('reaction_add',
-                                                       timeout=60.0, 
+                                                       timeout=60.0,
                                                        check=check)
                 await message.delete()
             except nextcord.errors.Forbidden as e:
@@ -358,7 +365,7 @@ async def on_message(rawMsg):
         # for downloading videos
         if filteredMsgLow.startswith(f"{prompt}download"):
             query = re.sub(f"{prompt}download", "",
-                            rawMsg.content, flags=re.IGNORECASE)
+                           rawMsg.content, flags=re.IGNORECASE)
             ytdlVid = yt_dlp.YoutubeDL(
                 {"format": "best", "outtml": "-", "quiet": True})
             data = ytdlVid.extract_info(query, download=False)
@@ -371,8 +378,8 @@ async def on_message(rawMsg):
                 video = nextcord.File(videoBinary, filename="video.mp4")
                 await rawMsg.channel.send(file=video)
             except (nextcord.errors.HTTPException,
-                    nextcord.errors.Forbidden, 
-                    requests.exceptions.Timeout, 
+                    nextcord.errors.Forbidden,
+                    requests.exceptions.Timeout,
                     requests.exceptions.HTTPError) as e:
                 await rawMsg.channel.send(f"An error has occured. {e}")
 
@@ -408,8 +415,16 @@ async def desco_balance_checker():
                              f"This month's consumption upto today is {monthlyUse}৳.")
 
 
+@tasks.loop(seconds=10)
+async def change_status():
+    await client.change_presence(activity=nextcord.Game(next(STATUES)))
+
+@change_status.before_loop
+async def before_change_status():
+    await client.wait_until_ready()
+
 desco_balance_checker.start()
-# before = psutil.disk_io_counters()
+change_status.start()
+
+keep_alive()
 client.run(TOKEN)
-# after = psutil.disk_io_counters()
-# print(after.write_bytes - before.write_bytes)
