@@ -7,6 +7,7 @@ import json
 import re
 import threading
 import random
+
 # external libraries and apis
 import nextcord
 import psutil
@@ -29,20 +30,18 @@ load_dotenv()
 
 # loading global variables
 LOG_CHANNEL = None
-STATUES = cycle([
-    "hello bbg 😏", 
-    "in your walls 👀",
-    "hira chan my beloved 😍"])
+STATUES = cycle(["hello bbg 😏", "in your walls 👀", "hira chan my beloved 😍"])
 TOKEN = os.getenv(key="TOKEN")
 API_KEY = os.getenv(key="googleApiKey")
 CSE_ID = os.getenv(key="searchEngineId")
 EMOJI_REGEX = re.compile(pattern=(r"<:(\w+):(\d+)>"))
 URL_REGEX = re.compile(
-    pattern=r"((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z]){2,6}([a-zA-Z0-9\.\&\/\?\:@\-_=#])*")
+    pattern=r"((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z]){2,6}([a-zA-Z0-9\.\&\/\?\:@\-_=#])*"
+)
 PUNC_REGEX = re.compile(r"(?<!\A)[^\w\s]")
 FFMPEG_OPTIONS = {
-    'options': '-vn',
-    "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
+    "options": "-vn",
+    "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
 }
 vcs = {}
 queue = {}
@@ -94,8 +93,7 @@ async def on_message(rawMsg):
         try:
             if len(queue[vc.guild.id][0]) > 0:
                 queueSong = queue[vc.guild.id][0][0]
-                queueMusic = nextcord.FFmpegPCMAudio(
-                    queueSong, **FFMPEG_OPTIONS)
+                queueMusic = nextcord.FFmpegPCMAudio(queueSong, **FFMPEG_OPTIONS)
                 queue[vc.guild.id][0].pop(0)
                 queue[vc.guild.id][1].pop(0)
                 await vc.play(queueMusic, after=queue_check)
@@ -117,32 +115,41 @@ async def on_message(rawMsg):
 
     # logging messages
     if rawMsg.channel != LOG_CHANNEL:
-        await LOG_CHANNEL.send(f"{currentTime}: {rawMsg.author.name} -> {rawMsg.content}")
+        await LOG_CHANNEL.send(
+            f"{currentTime}: {rawMsg.author.name} -> {rawMsg.content}"
+        )
 
     # *For non-prompt/automated responses
     # !Needs to refactored because it's way too ugly
     # translating messages
     if msgChannelId in translateGuilds:
-        if (translator.detect(filteredMsgNoURL).lang != "en" and
-                not set(filteredMsgLow.split()).intersection(phraseObj.UWUPROMPT)):
+        if translator.detect(filteredMsgNoURL).lang != "en" and not set(
+            filteredMsgLow.split()
+        ).intersection(phraseObj.UWUPROMPT):
             translation = translator.translate(filteredMsgNoURL)
             translationSrc = LANGUAGES.get(translation.src)
-            message = await rawMsg.reply(f"*__From {translationSrc}__*" +
-                                         f"\n>>> {translation.text}",
-                                         mention_author=False)
+            message = await rawMsg.reply(
+                f"*__From {translationSrc}__*" + f"\n>>> {translation.text}",
+                mention_author=False,
+            )
             await message.add_reaction("❌")
             if randomChance == 2:
-                await message.reply("(*React with ❌ to delete wrong translations*)",
-                                    mention_author=False)
+                await message.reply(
+                    "(*React with ❌ to delete wrong translations*)",
+                    mention_author=False,
+                )
 
             def check(reaction, user):
-                return (user == rawMsg.author and
-                        str(reaction.emoji) == "❌" and
-                        reaction.message.id == message.id)
+                return (
+                    user == rawMsg.author
+                    and str(reaction.emoji) == "❌"
+                    and reaction.message.id == message.id
+                )
+
             try:
-                reaction, user = await client.wait_for('reaction_add',
-                                                       timeout=60.0,
-                                                       check=check)
+                reaction, user = await client.wait_for(
+                    "reaction_add", timeout=60.0, check=check
+                )
                 await message.delete()
             except nextcord.errors.Forbidden as e:
                 await message.channel.send(f"Error deleting the message: {e}")
@@ -185,16 +192,16 @@ async def on_message(rawMsg):
                 bar = phraseObj.uwuRoastMethod()
                 await rawMsg.reply(bar)
 
-
-# *Prompt based non-slash commands
+    # *Prompt based non-slash commands
     for prompt in phraseObj.PROMPT:
         # for skipping iterations
         if prompt not in filteredMsgLow:
             continue
 
         # telling dad jokes
-        if (filteredMsgLow.startswith(f"{prompt}tell me a joke") or
-                filteredMsgLow.startswith(f"{prompt}tell me a dad joke")):
+        if filteredMsgLow.startswith(
+            f"{prompt}tell me a joke"
+        ) or filteredMsgLow.startswith(f"{prompt}tell me a dad joke"):
             await rawMsg.reply(phraseObj.dadJokeMethod())
             break
 
@@ -218,36 +225,49 @@ async def on_message(rawMsg):
 
         # google search
         if filteredMsgLow.startswith(f"{prompt}what is"):
-            query = re.sub(f"{prompt}what is", "",
-                           rawMsg.content, flags=re.IGNORECASE)
+            query = re.sub(f"{prompt}what is", "", rawMsg.content, flags=re.IGNORECASE)
             result = webSearchObj.google_search(query)
             await rawMsg.reply(result)
             break
 
-        if (filteredMsgLow.startswith(f"{prompt}search for") and
-                filteredMsgLow.endswith("on google")):
-            query = re.sub(f"^{prompt}search for | on google$", "", rawMsg.content,
-                           flags=re.IGNORECASE)
+        if filteredMsgLow.startswith(f"{prompt}search for") and filteredMsgLow.endswith(
+            "on google"
+        ):
+            query = re.sub(
+                f"^{prompt}search for | on google$",
+                "",
+                rawMsg.content,
+                flags=re.IGNORECASE,
+            )
             result = webSearchObj.google_search(query)
             await rawMsg.reply(result)
             break
 
         # wikipedia search
-        if (filteredMsgLow.startswith(f"{prompt}search for") and
-                filteredMsgLow.endswith("on wikipedia")):
-            query = re.sub(f"^{prompt}search for | on wikipedia$", "", filteredMsg,
-                           flags=re.IGNORECASE)
+        if filteredMsgLow.startswith(f"{prompt}search for") and filteredMsgLow.endswith(
+            "on wikipedia"
+        ):
+            query = re.sub(
+                f"^{prompt}search for | on wikipedia$",
+                "",
+                filteredMsg,
+                flags=re.IGNORECASE,
+            )
             wikiSummary = webSearchObj.wikiSearch(query)[0]
             relatedArticles = webSearchObj.wikiSearch(query)[1]
             relatedArticles = chr(10).join(relatedArticles)
-            await rawMsg.reply(f"**__Related titles:__** \n```{relatedArticles}  ```",
-                               mention_author=False)
+            await rawMsg.reply(
+                f"**__Related titles:__** \n```{relatedArticles}  ```",
+                mention_author=False,
+            )
             await rawMsg.reply(f"**__Summary of your query__**: \n```{wikiSummary} ```")
             break
 
         # purging messages
-        if (filteredMsgLow.startswith(f"{prompt}purge") and
-                rawMsg.author.guild_permissions.manage_messages):
+        if (
+            filteredMsgLow.startswith(f"{prompt}purge")
+            and rawMsg.author.guild_permissions.manage_messages
+        ):
             numOfMsg = re.sub(f"{prompt}purge", "", filteredMsgLow)
             await rawMsg.channel.send(f"{numOfMsg} messages purged.")
             await rawMsg.channel.purge(limit=int(numOfMsg) + 2)
@@ -257,18 +277,19 @@ async def on_message(rawMsg):
         if filteredMsgLow.startswith(f"{prompt}define"):
             query = re.sub(f"{prompt}define", "", filteredMsg)
             result = webSearchObj.dictionary(query)
-            await rawMsg.reply(f"### {result[0]} \n" +
-                               f"### {result[1]} \n" +
-                               f"__Pronounciation__: {result[2]} \n" +
-                               f"__Origin__: {result[3]} \n" +
-                               f"__Definitions__:{result[4]}")
+            await rawMsg.reply(
+                f"### {result[0]} \n"
+                + f"### {result[1]} \n"
+                + f"__Pronounciation__: {result[2]} \n"
+                + f"__Origin__: {result[3]} \n"
+                + f"__Definitions__:{result[4]}"
+            )
             break
 
         # !Needs to refactored because it's way too ugly
         # for playing music
         if filteredMsgLow.startswith(f"{prompt}play"):
-            url = re.sub(f"{prompt}play", "",
-                         rawMsg.content, flags=re.IGNORECASE)
+            url = re.sub(f"{prompt}play", "", rawMsg.content, flags=re.IGNORECASE)
             try:
                 vc = await rawMsg.author.voice.channel.connect()
                 vcs[vc.guild.id] = vc
@@ -299,8 +320,7 @@ async def on_message(rawMsg):
 
         # adding music to queue:
         if filteredMsgLow.startswith(f"{prompt}queue"):
-            url = re.sub(f"{prompt}queue", "",
-                         rawMsg.content, flags=re.IGNORECASE)
+            url = re.sub(f"{prompt}queue", "", rawMsg.content, flags=re.IGNORECASE)
             try:
                 data = ytdlMusic.extract_info(url, download=False)
             except:
@@ -327,8 +347,7 @@ async def on_message(rawMsg):
                 vcs[rawMsg.guild.id].pause()
                 vc = vcs[rawMsg.guild.id]
                 nextSong = queue[rawMsg.guild.id][0][0]
-                nextMusic = nextcord.FFmpegPCMAudio(
-                    nextSong, **FFMPEG_OPTIONS)
+                nextMusic = nextcord.FFmpegPCMAudio(nextSong, **FFMPEG_OPTIONS)
                 await rawMsg.reply(f"Skipped to {queue[rawMsg.guild.id][1][0]}.")
                 queue[rawMsg.guild.id][0].pop(0)
                 queue[rawMsg.guild.id][1].pop(0)
@@ -364,10 +383,8 @@ async def on_message(rawMsg):
 
         # for downloading videos
         if filteredMsgLow.startswith(f"{prompt}download"):
-            query = re.sub(f"{prompt}download", "",
-                           rawMsg.content, flags=re.IGNORECASE)
-            ytdlVid = yt_dlp.YoutubeDL(
-                {"format": "best", "outtml": "-", "quiet": True})
+            query = re.sub(f"{prompt}download", "", rawMsg.content, flags=re.IGNORECASE)
+            ytdlVid = yt_dlp.YoutubeDL({"format": "best", "outtml": "-", "quiet": True})
             data = ytdlVid.extract_info(query, download=False)
             url = data["url"]
             await rawMsg.reply("Downloading...")
@@ -377,10 +394,12 @@ async def on_message(rawMsg):
                 videoBinary = io.BytesIO(content)
                 video = nextcord.File(videoBinary, filename="video.mp4")
                 await rawMsg.channel.send(file=video)
-            except (nextcord.errors.HTTPException,
-                    nextcord.errors.Forbidden,
-                    requests.exceptions.Timeout,
-                    requests.exceptions.HTTPError) as e:
+            except (
+                nextcord.errors.HTTPException,
+                nextcord.errors.Forbidden,
+                requests.exceptions.Timeout,
+                requests.exceptions.HTTPError,
+            ) as e:
                 await rawMsg.channel.send(f"An error has occured. {e}")
 
         # replying to mentions
@@ -397,10 +416,14 @@ async def feedback(interaction: Interaction, arg: str):
     try:
         await FEEDBACKCHANNEL.send(f"From {userName}, \n{arg}")
         await interaction.response.send_message("Feedback sent!", ephemeral=True)
-    except (nextcord.errors.ApplicationInvokeError, nextcord.errors.Forbidden,
-            nextcord.errors.HTTPException) as e:
-        await interaction.response.send_message(f"Feedback couldn't be sent. Error: \n" +
-                                                f"```{e} ```")
+    except (
+        nextcord.errors.ApplicationInvokeError,
+        nextcord.errors.Forbidden,
+        nextcord.errors.HTTPException,
+    ) as e:
+        await interaction.response.send_message(
+            f"Feedback couldn't be sent. Error: \n" + f"```{e} ```"
+        )
 
 
 # check my electric meter balance
@@ -411,17 +434,21 @@ async def desco_balance_checker():
         balance = descoAPI(i).balanceCheck()["balance"]
         monthlyUse = descoAPI(i).balanceCheck()["currentMonthConsumption"]
         if int(balance) <= 250:
-            await DOCId.send(f"Heyy, {balance}৳ Balance left in {i}. \n" +
-                             f"This month's consumption upto today is {monthlyUse}৳.")
+            await DOCId.send(
+                f"Heyy, {balance}৳ Balance left in {i}. \n"
+                + f"This month's consumption upto today is {monthlyUse}৳."
+            )
 
 
 @tasks.loop(seconds=10)
 async def change_status():
     await client.change_presence(activity=nextcord.Game(next(STATUES)))
 
+
 @change_status.before_loop
 async def before_change_status():
     await client.wait_until_ready()
+
 
 desco_balance_checker.start()
 change_status.start()
