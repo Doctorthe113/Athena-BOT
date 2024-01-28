@@ -30,7 +30,7 @@ load_dotenv()
 # loading global variables
 LOG_CHANNEL = None
 STATUES = cycle([
-    "hello bbg <a:duckDance:1166434908609196192>", 
+    "hello bbg 😏", 
     "in your walls 👀",
     "hira chan my beloved 😍"])
 TOKEN = os.getenv(key="TOKEN")
