@@ -24,7 +24,6 @@ from datetime import datetime
 from extentions.phrases import phrase
 from extentions.web_search import webSearch
 from extentions.desco import descoAPI
-from extentions.keep_alive import keep_alive
 
 load_dotenv()
 
@@ -453,5 +452,4 @@ async def before_change_status():
 desco_balance_checker.start()
 change_status.start()
 
-keep_alive()
 client.run(TOKEN)
