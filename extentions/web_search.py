@@ -3,12 +3,11 @@ import requests
 from googleapiclient.discovery import build
 
 #! all the queries are case sensitive
-class webSearch():
+class WebSearch():
     def __init__(self, apiKey, cseId) -> None:
         self.APIKEY = apiKey
         self.CSEID = cseId
         self.dictionaryApi = "https://api.dictionaryapi.dev/api/v2/entries/en/"
-
 
     def google_search(self, query):
         service = build("customsearch", "v1", developerKey=self.APIKEY, static_discovery=False).cse()
@@ -21,7 +20,6 @@ class webSearch():
             searchResult = "No results found"
         return searchResult
 
-
     def wikiSearch(self, query):
         relatedArticles = wikipedia.search(query)
         try:
@@ -29,7 +27,6 @@ class webSearch():
         except (wikipedia.exceptions.DisambiguationError, wikipedia.exceptions.PageError) as e:
             wikiSummary = e
         return wikiSummary, relatedArticles
-
 
     def dictionary(self, query):
         vocub = requests.get(self.dictionaryApi + query).json()

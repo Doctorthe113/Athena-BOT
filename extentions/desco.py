@@ -2,7 +2,7 @@
 # https://pypi.org/project/descoApi/1.0/
 from requests import get
 
-class descoAPI():
+class DescoAPI():
     def __init__(self, accountNumber: int) -> None:
         self.balanceURL = "http://prepaid.desco.org.bd/api/tkdes/customer/getBalance?"
         self.monthlyConsume = "http://prepaid.desco.org.bd/api/tkdes/customer/getCustomerMonthlyConsumption?"

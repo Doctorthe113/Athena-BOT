@@ -1,7 +1,8 @@
 import random
-class phrase():
+import requests
+class Phrase():
     def __init__(self) -> None:
-        self.PROMPT = (
+        self.PREFIX = (
             "athena ",
             "hey athena ",
             "hi athena ",
@@ -9,8 +10,8 @@ class phrase():
             "sup athena ",
             "athena senpai ",
             "<@1085635807773208616> ",
-            "$", # isnt supported yet
-            "?" # isnt supported yet
+            "$",
+            "?"
         )
         self.GREETINGPROMPT = (
             "hi",
@@ -245,23 +246,53 @@ class phrase():
         "It’s scary to think people like you are allowed to vote",
         "I miss the golden days when the UWU word was banned."
         )
+        self.helpMsg = """
+__**Prefixes**__ = `athena `, `hey athena `, `hi athena `, `hello athena `, 
+`sup athena `, `athena senpai `, `$`, `?`, and mentions.
 
+__**Command List**__:
+1. `ping` - Pings Athena
+2. `help` - Shows this message
+3. `roll a dice` - Rolls a dice
+4. `magic 8 ball` - Ask Athena a question
+5. `tell me a joke` or `tell me a dad joke` - Ask Athena a dad joke
+6. `check resources` - Check memory and thread usage
+7. `bored` - Get a random activity
+8. `what is {x}` or `google {x}` - Get google results
+9. `search for {x} on wikipedia` - Get wikipedia results
+10. `define {x}` - Get dictionary results
+11. `download {x}` - Download youtube videos
+12. `nasa` - Get NASA photo
+
+__**Music**__:
+1. `join` - Join a voice channel
+2. `add {x}` - Add a song to the queue
+3. `play` - Play or starts the music playback
+4. `pause` - Pauses the music
+5. `resume` - Resumes the music
+6. `stop` - Stops the music
+7. `queue` - Shows the queue
+8. `skip` - Skips the current song
+9. `loop` - Loops the current queue
+
+If you face any bugs, use `/feedback` to report it please. 😊
+"""
 
     def greetingMethod(self):
         return random.choice(self.GREETINGRESPONSE)
 
-
     def magic8ballMethod(self):
         return random.choice(self.MAGIC8BALL)
-
 
     def dadJokeMethod(self):
         return random.choice(self.DADJOKE)
 
-
     def uwuRoastMethod(self):
         return random.choice(self.UWUROAST)
 
-
     def rollDiceMethod(self):
         return random.randint(1, 6)
+
+    def bored(self):
+        response = requests.get("https://www.boredapi.com/api/activity/").json()
+        return response["activity"]
