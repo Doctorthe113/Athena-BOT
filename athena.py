@@ -39,7 +39,7 @@ load_dotenv()
 
 
 
-# loading global variables
+#* loading global variables
 vcs = {} # {guild_id: voice_client_object}
 logChannel = None
 statuses = cycle([
@@ -53,6 +53,7 @@ TOKEN = os.getenv(key="TOKEN")
 GOOGLE_API = os.getenv(key="googleAPI")
 CSE_ID = os.getenv(key="searchEngineId")
 NASA_API = os.getenv(key="nasaAPI")
+NINJA_API = os.getenv(key="ninjaAPI")
 EMOJI_REGEX = re.compile(pattern=(r"<:(\w+):(\d+)>"))
 URL_REGEX = re.compile(
     pattern=r"((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z]){2,6}([a-zA-Z0-9\.\&\/\?\:@\-_=#])*"
@@ -65,7 +66,7 @@ FFMPEG_OPTIONS = {
 
 
 
-# loading differebnt classes and etcs
+#* loading differebnt classes and etcs
 translator = Translator()
 phraseObj = Phrase()
 webSearchObj = WebSearch(apiKey=GOOGLE_API, cseId=CSE_ID)
@@ -167,18 +168,18 @@ async def on_message(rawMsg):
 
     # saying hi/hello
     if filteredMsgLow == phraseObj.GREETINGPROMPT:
-        greet = phraseObj.greetingMethod()
+        greet = phraseObj.greeting_method()
         await rawMsg.channel.send(greet)
 
     # magic 8 ball
     if filteredMsgLow.startswith(phraseObj.MAGIC8BALLPROMPT):
-        bar = phraseObj.magic8ballMethod()
+        bar = phraseObj.magic8ball_method()
         await rawMsg.reply(bar)
         return None
 
     # rolling a dice
     if filteredMsgLow == "roll a dice":
-        dice = phraseObj.rollDiceMethod()
+        dice = phraseObj.roll_dice_method()
         await rawMsg.reply(f"🎲 {dice} 🎲")
         return None
 
@@ -198,7 +199,7 @@ async def on_message(rawMsg):
     if msgChannelId not in uwuGuilds:
         for i in phraseObj.UWUPROMPT:
             if randomChance == 2 and i in filteredMsgLow:
-                bar = phraseObj.uwuRoastMethod()
+                bar = phraseObj.uwu_roast_method()
                 await rawMsg.reply(bar)
 
     # for mentions
@@ -211,7 +212,7 @@ async def on_message(rawMsg):
 
 
 
-# *For commands
+#* For commands
 # for pinging the bot. eg: "ping"
 @bot.command()
 async def ping(ctx):
@@ -229,7 +230,7 @@ async def help(ctx):
 async def tell(ctx, *, arg):
     if not arg.startswith(("me a joke", "me a dad joke")):
         return None
-    await ctx.send(phraseObj.dadJokeMethod())
+    await ctx.send(phraseObj.dad_joke_method())
 
 # for bored. eg: "i am bored"
 @bot.command()
@@ -332,7 +333,6 @@ async def join(ctx):
         await ctx.send(f"Joined {dj}'s voice channel!")
     except AttributeError:
         await ctx.send("You haven't joined a voice channel yet, silly! 😒")
-
 
 # for stopping music playback. eg: "stop"
 @bot.command()
@@ -442,9 +442,54 @@ async def nasa(ctx):
     except:
         await ctx.send("I am unable to send this beautiful image 😔")
 
+# for finiding someone's age. eg: "agify John"
+@bot.command()
+async def agify(ctx, *, arg):
+    age = phraseObj.agify(arg)
+    if age < 18:
+        await ctx.send(f"{arg} is {age} years old!")
+    else:
+        await ctx.send(f"{arg} is **{age}** years old! What a boomer!🥳")
+
+# for random dog images. eg: "dog"
+@bot.command()
+async def dog(ctx):
+    await ctx.send(phraseObj.dog())
+
+# for random cat images. eg: "cat"
+@bot.command()
+async def cat(ctx):
+    await ctx.send(phraseObj.cat())
+
+# for random cocktail. eg: "cocktail random/{cocktail name}"
+@bot.command()
+async def cocktail(ctx, *, arg):
+    if arg.lower() == "random":
+        await ctx.send(phraseObj.random_cocktail())
+    else:
+        await ctx.send(phraseObj.search_cocktail(arg))
+
+# for random facts. eg: "fact"
+@bot.command()
+async def fact(ctx):
+    await ctx.send(phraseObj.fact(NINJA_API))
+
+# for random bucketlist. eg: "bucketlist"
+@bot.command()
+async def bucket(ctx, *, arg):
+    if not arg == "list":
+        return None
+    await ctx.send(phraseObj.bucket_list(NINJA_API))
+
+# for finiding rhyming words. eg: "rhyme"
+@bot.command()
+async def rhyme(ctx, *, arg):
+    words = phraseObj.rhyme(NINJA_API, arg)
+    await ctx.send(f"__**Here are few words that rhyme with {arg}:**__```\n{words}```")
 
 
-# *Slash Commands
+
+#* Slash Commands
 # slash command for feedback:
 @bot.slash_command(name="feedback", description="Send feedback directly.")
 async def feedback(interaction: Interaction, arg: str):
