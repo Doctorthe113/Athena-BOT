@@ -257,7 +257,7 @@ __**Command List**__:
 4. `magic 8 ball` - Ask Athena a question
 5. `tell me a joke` or `tell me a dad joke` - Ask Athena a dad joke
 6. `check resources` - Check memory and thread usage
-7. `bored` - Get a random activity
+7. `i am bored` - Get a random activity
 8. `what is {x}` or `google {x}` - Get google results
 9. `search for {x} on wikipedia` - Get wikipedia results
 10. `define {x}` - Get dictionary results
