@@ -329,7 +329,7 @@ If you face any bugs, use `/feedback` to report it please. 😊
     def fact(self, apiKey):
         api_url = "https://api.api-ninjas.com/v1/facts"
         response = requests.get(api_url, headers={'X-Api-Key': apiKey}).json()
-        return response["fact"]
+        return response[0]["fact"]
 
     def bucket_list(self, apiKey):
         api_url = "https://api.api-ninjas.com/v1/bucketlist"
