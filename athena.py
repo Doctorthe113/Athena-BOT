@@ -233,14 +233,7 @@ async def tell(ctx, *, arg):
     await ctx.send(phraseObj.dad_joke_method())
 
 # for bored. eg: "i am bored"
-@bot.command()
-async def i(ctx, *, arg):
-    if not arg.startswith("am bored"):
-        return None
-    await ctx.send(f"Here's an activity for you: {phraseObj.bored()}")
-
-# for bored but the capital letter version. eg: "I am bored"
-@bot.command()
+@bot.command(aliases = ["I"])
 async def i(ctx, *, arg):
     if not arg.startswith("am bored"):
         return None
