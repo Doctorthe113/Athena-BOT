@@ -443,7 +443,7 @@ async def nasa(ctx):
 # for finiding someone's age. eg: "agify John"
 @bot.command()
 async def agify(ctx, *, arg):
-    age = phraseObj.agify(arg)
+    age = phraseObj.agify()
     if age < 18:
         await ctx.send(f"{arg} is {age} years old!")
     else:

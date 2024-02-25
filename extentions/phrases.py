@@ -310,10 +310,14 @@ If you face any bugs, use `/feedback` to report it please. 😊
         response = requests.get("https://www.boredapi.com/api/activity/").json()
         return response["activity"]
 
-    def agify(self, name):
-        #? use a random number gen instead
-        response = requests.get(f"https://api.agify.io/?name={name}").json()
-        return response["age"]
+    def agify(self):
+        def random_age(firstLow, FirstHigh, secondLow, secondHigh, k):
+            if random.random() < k:
+                randNumber = random.randint(firstLow, FirstHigh)
+            else:
+                randNumber = random.randint(secondLow, secondHigh)
+            return randNumber
+        return random_age(2, 60, 61, 500, 0.8)
 
     def dog(self):
         response = requests.get("https://dog.ceo/api/breeds/image/random").json()
