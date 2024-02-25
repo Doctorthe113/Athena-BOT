@@ -203,7 +203,7 @@ async def on_message(rawMsg):
                 await rawMsg.reply(bar)
 
     # for mentions
-    if filteredMsgLow.startswith("athena"):
+    if filteredMsgLow == "athena":
         await rawMsg.reply("Hey that's me! 🙋‍♀️")
 
     await bot.process_commands(rawMsg)
