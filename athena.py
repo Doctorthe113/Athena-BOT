@@ -203,10 +203,8 @@ async def on_message(rawMsg):
                 await rawMsg.reply(bar)
 
     # for mentions
-    for prompt in phraseObj.PREFIX:
-        if filteredMsgLow == prompt:
-            await rawMsg.reply("Hey that's me! 🙋‍♀️")
-            break
+    if filteredMsgLow.startswith("athena"):
+        await rawMsg.reply("Hey that's me! 🙋‍♀️")
 
     await bot.process_commands(rawMsg)
 

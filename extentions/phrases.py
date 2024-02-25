@@ -9,6 +9,12 @@ class Phrase():
             "hello athena ", 
             "sup athena ",
             "athena senpai ",
+            "Athena ",
+            "Hey Athena ",
+            "Hi Athena ",
+            "Hello Athena ", 
+            "Sup Athena ",
+            "Athena senpai ",
             "<@1085635807773208616> ",
             "$",
             "?"
