@@ -29,7 +29,7 @@ from datetime import datetime
 from extentions.phrases import Phrase
 from extentions.web_search import WebSearch
 from extentions.desco import DescoAPI
-from extentions.queue_check import queue_check, queue_del, queue_grab, queue_loop, queue_make, queue_add
+from extentions.queue_check import queue_check, queue_del, queue_grab, queue_loop, queue_make, queue_add, queue_shuffle
 from extentions.nasa import Nasa
 
 load_dotenv()
@@ -370,6 +370,7 @@ async def play(ctx):
                 **FFMPEG_OPTIONS
             )
         vc.play(track, after=lambda e: queue_check(vc))
+        await ctx.send(f"Started playing...")
     else:
         await ctx.send("I am already playing! Use `athena add` to add music.")
 
@@ -427,6 +428,18 @@ async def queue(ctx):
         await ctx.send(f"```\n{queueList}```")
     except:
         await ctx.send("Queue is empty.")
+
+# for shuffling queue. eg: "shuffle"
+@bot.command()
+async def shuffle(ctx):
+    try:
+        vc = vcs[ctx.guild.id]
+        queue_shuffle(vc)
+        queue = queue_grab(vc)
+        queueList = "\n".join(queue[1])
+        await ctx.send(f"Queue shuffled! Here's new queue:```\n{queueList}```")
+    except:
+        await ctx.send("I am unable to shuffle 😔")
 
 # for NASA images. eg: "nasa"
 @bot.command()
