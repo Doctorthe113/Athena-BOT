@@ -1,9 +1,6 @@
 # author: @doctorthe113
 # github: https://github.com/Doctorthe113/Athena-BOT
-# version: 1.13.1
-
-# __formatting style__: camel case for variables, snake case for functions, 
-# UPPERCASE for constants. Extra indent for if statement.
+# version: 1.13.1.1
 
 
 # built-in libraries
@@ -61,7 +58,7 @@ URL_REGEX = re.compile(
 PUNC_REGEX = re.compile(r"(?<!\A)[^\w\s]")
 FFMPEG_OPTIONS = {
     "options": "-vn",
-    "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
+    "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 60",
 }
 
 

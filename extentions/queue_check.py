@@ -1,9 +1,10 @@
 import nextcord
+import random
 
 queues = {} # {guild_id: [url_list, title_list, current_index, loop]}
 FFMPEG_OPTIONS = {
     "options": "-vn",
-    "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 20",
+    "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 60",
 }
 
 def queue_make(voice):
@@ -22,6 +23,13 @@ def queue_grab(voice):
 def queue_loop(voice):
     queues[voice.guild.id][3] = True
 
+def queue_shuffle(voice):
+    zippedQueue = zip(queues[voice.guild.id][0], queues[voice.guild.id][1])
+    zippedQueue = list(zippedQueue)
+    random.shuffle(zippedQueue)
+    queues[voice.guild.id][0], queues[voice.guild.id][1] = zip(*zippedQueue)
+
+#? rename the function?
 def queue_check(voice):
     queues[voice.guild.id][2] += 1
     index = queues[voice.guild.id][2]
