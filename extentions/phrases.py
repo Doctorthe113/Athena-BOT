@@ -287,6 +287,7 @@ __**Music**__:
 7. `queue` - Shows the queue
 8. `skip` - Skips the current song
 9. `loop` - Loops the current queue
+10. `shuffle` - Shuffles the current queue
 
 If you face any bugs, use `/feedback` to report it please. 😊
 """
