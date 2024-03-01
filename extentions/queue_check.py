@@ -27,7 +27,8 @@ def queue_shuffle(voice):
     zippedQueue = zip(queues[voice.guild.id][0], queues[voice.guild.id][1])
     zippedQueue = list(zippedQueue)
     random.shuffle(zippedQueue)
-    queues[voice.guild.id][0], queues[voice.guild.id][1] = zip(*zippedQueue)
+    a, b = zip(*zippedQueue)
+    queues[voice.guild.id][0], queues[voice.guild.id][1] = list(a), list(b)
 
 #? rename the function?
 def queue_check(voice):
