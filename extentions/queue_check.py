@@ -51,3 +51,5 @@ def queue_check(voice):
             voice.disconnect()
             del queues[voice.guild.id]
         return None
+    except nextcord.errors.ClientException:
+        return None
