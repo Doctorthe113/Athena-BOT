@@ -21,7 +21,10 @@ def queue_grab(voice):
     return queues[voice.guild.id]
 
 def queue_loop(voice):
-    queues[voice.guild.id][3] = True
+    if queues[voice.guild.id][3]:
+        queues[voice.guild.id][3] = False
+    else:
+        queues[voice.guild.id][3] = True
 
 def queue_shuffle(voice):
     zippedQueue = zip(queues[voice.guild.id][0], queues[voice.guild.id][1])
