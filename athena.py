@@ -399,8 +399,11 @@ async def resume(ctx):
 async def loop(ctx):
     try:
         vc = vcs[ctx.guild.id]
-        queue_loop(vc)
-        await ctx.send("Looping the current queue!")
+        loop = queue_loop(vc)
+        if loop:
+            await ctx.send("Looping the current queue!")
+        else:
+            await ctx.send("Turned loop off!")
     except:
         await ctx.send("I am unable to loop 😔")
 
