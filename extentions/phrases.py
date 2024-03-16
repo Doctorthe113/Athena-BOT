@@ -288,6 +288,7 @@ __**Music**__:
 8. `skip` - Skips the current song
 9. `loop` - Loops the current queue
 10. `shuffle` - Shuffles the current queue
+11. `remove {x}` - Removes a song from the queue. `x` is the index of the song you'd get from `queue`.
 
 If you face any bugs, use `/feedback` to report it please. 😊
 """
