@@ -35,8 +35,8 @@ def queue_shuffle(voice):
     queues[voice.guild.id][0], queues[voice.guild.id][1] = list(a), list(b)
 
 def queue_remove(voice, index):
-    del queues[voice.guild.id][0][index]
-    del queues[voice.guild.id][1][index]
+    queues[voice.guild.id][0].pop(index)
+    queues[voice.guild.id][1].pop(index)
 
 #? rename the function?
 def queue_check(voice):
