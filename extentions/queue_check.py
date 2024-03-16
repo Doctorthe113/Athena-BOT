@@ -7,30 +7,6 @@ FFMPEG_OPTIONS = {
     "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 60",
 }
 
-#? rename the function?
-def queue_check(voice):
-    queues[voice.guild.id][2] += 1
-    index = queues[voice.guild.id][2]
-    loop = queues[voice.guild.id][3]
-    try:
-        songURL = queues[voice.guild.id][0][index]
-        track = nextcord.FFmpegPCMAudio(
-            songURL,
-            **FFMPEG_OPTIONS
-        )
-        voice.play(track, after=lambda e: queue_check(voice))
-    except IndexError:
-        if loop == True:
-            index = 0
-            queues[voice.guild.id][2] = -1
-            queue_check(voice)
-        else:
-            voice.disconnect()
-            del queues[voice.guild.id]
-        return None
-    except nextcord.errors.ClientException:
-        return None
-
 def queue_make(voice):
     queues[voice.guild.id] = [[], [], 0, False]
 
@@ -61,3 +37,27 @@ def queue_shuffle(voice):
 def queue_remove(voice, index):
     del queues[voice.guild.id][0][index]
     del queues[voice.guild.id][1][index]
+
+#? rename the function?
+def queue_check(voice):
+    queues[voice.guild.id][2] += 1
+    index = queues[voice.guild.id][2]
+    loop = queues[voice.guild.id][3]
+    try:
+        songURL = queues[voice.guild.id][0][index]
+        track = nextcord.FFmpegPCMAudio(
+            songURL,
+            **FFMPEG_OPTIONS
+        )
+        voice.play(track, after=lambda e: queue_check(voice))
+    except IndexError:
+        if loop == True:
+            index = 0
+            queues[voice.guild.id][2] = -1
+            queue_check(voice)
+        else:
+            voice.disconnect()
+            del queues[voice.guild.id]
+        return None
+    except nextcord.errors.ClientException:
+        return None
