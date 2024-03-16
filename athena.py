@@ -29,7 +29,7 @@ from datetime import datetime
 from extentions.phrases import Phrase
 from extentions.web_search import WebSearch
 from extentions.desco import DescoAPI
-from extentions.queue_check import queue_check, queue_del, queue_grab, queue_loop, queue_make, queue_add, queue_shuffle
+from extentions.queue_check import queue_check, queue_del, queue_grab, queue_loop, queue_make, queue_add, queue_remove, queue_shuffle
 from extentions.nasa import Nasa
 
 load_dotenv()
@@ -170,8 +170,8 @@ async def on_message(rawMsg):
 
     # magic 8 ball
     if filteredMsgLow.startswith(phraseObj.MAGIC8BALLPROMPT):
-        bar = phraseObj.magic8ball_method()
-        await rawMsg.reply(bar)
+        foo = phraseObj.magic8ball_method()
+        await rawMsg.reply(foo)
         return None
 
     # rolling a dice
@@ -189,15 +189,15 @@ async def on_message(rawMsg):
     if msgChannelId not in dadJokeGuilds:
         for i in phraseObj.DADPROMPT:
             if randomChance == 2 and filteredMsgLow.startswith(i):
-                bar = filteredMsgLow.partition(i)[-1]
-                await rawMsg.reply(f"Hi, {bar}, I am Athena!", mention_author=False)
+                foo = filteredMsgLow.partition(i)[-1]
+                await rawMsg.reply(f"Hi, {foo}, I am Athena!", mention_author=False)
 
     # uwu roasts
     if msgChannelId not in uwuGuilds:
         for i in phraseObj.UWUPROMPT:
             if randomChance == 2 and i in filteredMsgLow:
-                bar = phraseObj.uwu_roast_method()
-                await rawMsg.reply(bar)
+                foo = phraseObj.uwu_roast_method()
+                await rawMsg.reply(foo)
 
     # for mentions
     if filteredMsgLow == "athena":
@@ -337,6 +337,7 @@ async def stop(ctx):
         await vc.disconnect()
         await ctx.send("Stopped the music playback, cya later! 😊")
         del vcs[ctx.guild.id]
+        queue_del(vc)
     except:
         await ctx.send("I am unable to properly stop the music 😔")
 
@@ -427,8 +428,10 @@ async def queue(ctx):
     try:
         vc = vcs[ctx.guild.id]
         queue = queue_grab(vc)
-        queueList = "\n".join(queue[1])
-        await ctx.send(f"```\n{queueList}```")
+        queueList = ""
+        for i, j in enumerate(queue):
+            queueList = queueList + f"{i}. {j}\n"
+        await ctx.send(f"Here's the queue:```py\n{queueList}```")
     except:
         await ctx.send("Queue is empty.")
 
@@ -439,10 +442,24 @@ async def shuffle(ctx):
         vc = vcs[ctx.guild.id]
         queue_shuffle(vc)
         queue = queue_grab(vc)
-        queueList = "\n".join(queue[1])
-        await ctx.send(f"Queue shuffled! Here's new queue:```\n{queueList}```")
+        queueList = ""
+        for i, j in enumerate(queue):
+            queueList = queueList + f"{i}. {j}\n"
+        await ctx.send(f"Queue shuffled! Here's new queue:```py\n{queueList}```")
     except:
         await ctx.send("I am unable to shuffle 😔")
+
+# for removing a song from the queue. eg: "remove 1"
+@bot.command()
+async def remove(ctx, index):
+    try:
+        vc = vcs[ctx.guild.id]
+        index = int(index)
+        queue = queue_grab(vc)
+        await ctx.send(f"Removed __{queue[index]}__ from the queue.")
+        queue_remove(vc, index)
+    except:
+        await ctx.send(f"I am unable to remove {index}th song 😔")
 
 # for NASA images. eg: "nasa"
 @bot.command()
