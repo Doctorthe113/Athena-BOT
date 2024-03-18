@@ -18,7 +18,7 @@ def queue_del(voice):
     del queues[voice.guild.id]
 
 def queue_grab(voice):
-    return queues[voice.guild.id][1]
+    return queues[voice.guild.id]
 
 def queue_loop(voice):
     if queues[voice.guild.id][3]:
@@ -36,10 +36,10 @@ def queue_shuffle(voice):
 
 def queue_remove(voice, index):
     queues[voice.guild.id][0].pop(index)
-    queues[voice.guild.id][1].pop(index)
+    return queues[voice.guild.id][1].pop(index)
 
 #? rename the function?
-def queue_check(voice):
+async def queue_check(voice):
     queues[voice.guild.id][2] += 1
     index = queues[voice.guild.id][2]
     loop = queues[voice.guild.id][3]
@@ -54,10 +54,13 @@ def queue_check(voice):
         if loop == True:
             index = 0
             queues[voice.guild.id][2] = -1
-            queue_check(voice)
+            await queue_check(voice)
         else:
-            voice.disconnect()
-            del queues[voice.guild.id]
+            await voice.disconnect()
+            try:
+                del queues[voice.guild.id]
+            except:
+                pass
         return None
     except nextcord.errors.ClientException:
         return None

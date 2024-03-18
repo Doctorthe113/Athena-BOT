@@ -29,7 +29,16 @@ from datetime import datetime
 from extentions.phrases import Phrase
 from extentions.web_search import WebSearch
 from extentions.desco import DescoAPI
-from extentions.queue_check import queue_check, queue_del, queue_grab, queue_loop, queue_make, queue_add, queue_remove, queue_shuffle
+from extentions.queue_check import (
+        queue_check, 
+        queue_del, 
+        queue_grab, 
+        queue_loop, 
+        queue_make, 
+        queue_add, 
+        queue_remove, 
+        queue_shuffle
+    )
 from extentions.nasa import Nasa
 
 load_dotenv()
@@ -190,7 +199,7 @@ async def on_message(rawMsg):
         for i in phraseObj.DADPROMPT:
             if randomChance == 2 and filteredMsgLow.startswith(i):
                 foo = filteredMsgLow.partition(i)[-1]
-                await rawMsg.reply(f"Hi, {foo}, I am Athena!", mention_author=False)
+                await rawMsg.reply(f"Hi,{foo}, I am Athena!", mention_author=False)
 
     # uwu roasts
     if msgChannelId not in uwuGuilds:
@@ -419,7 +428,7 @@ async def skip(ctx):
         await ctx.send("I am not playing anything right now 😔")
     else:
         vc.pause()
-        queue_check(vc)
+        await queue_check(vc)
         await ctx.send("Skipping!")
 
 # for checking queue. eg: "queue"
@@ -428,10 +437,11 @@ async def queue(ctx):
     try:
         vc = vcs[ctx.guild.id]
         queue = queue_grab(vc)
+        queue = queue[1]
         queueList = ""
         for i, j in enumerate(queue):
             queueList = queueList + f"{i}. {j}\n"
-        await ctx.send(f"Here's the queue:```py\n{queueList}```")
+        await ctx.send(f"Here's the queue:```md\n{queueList}```")
     except:
         await ctx.send("Queue is empty.")
 
@@ -442,10 +452,11 @@ async def shuffle(ctx):
         vc = vcs[ctx.guild.id]
         queue_shuffle(vc)
         queue = queue_grab(vc)
+        queue = queue[1]
         queueList = ""
         for i, j in enumerate(queue):
             queueList = queueList + f"{i}. {j}\n"
-        await ctx.send(f"Queue shuffled! Here's new queue:```py\n{queueList}```")
+        await ctx.send(f"Queue shuffled! Here's new queue:```md\n{queueList}```")
     except:
         await ctx.send("I am unable to shuffle 😔")
 
@@ -455,9 +466,8 @@ async def remove(ctx, index):
     try:
         vc = vcs[ctx.guild.id]
         index = int(index)
-        queue = queue_grab(vc)
-        await ctx.send(f"Removed __{queue[index]}__ from the queue.")
-        queue_remove(vc, index)
+        removedSong = queue_remove(vc, index)
+        await ctx.send(f"Removed __{removedSong}__ from the queue.")
     except:
         await ctx.send(f"I am unable to remove {index}th song 😔")
 
