@@ -1,5 +1,8 @@
 import wikipedia
 import requests
+#? use the async version of praw?
+import praw
+import random
 from googleapiclient.discovery import build
 
 #! all the queries are case sensitive
@@ -40,3 +43,22 @@ class WebSearch():
             definition += "\n" + "**" + i["definitions"][0]["definition"] + \
                         "**" + "\n" + i["partOfSpeech"]
         return word, phonetics, pronounciation, origin, definition
+
+    def reddit(self, clientID, clientSecret, subreddit):
+        r = praw.Reddit(
+                client_id=clientID,
+                client_secret=clientSecret,
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                check_for_async=False
+            )
+        hot_posts = r.subreddit(subreddit).hot(limit=50)
+        imgExtensions = ("jpg", "png", "jpeg", "gif")
+        postURL = []
+        for post in hot_posts:
+            if post.media or post.url.endswith(imgExtensions):
+                postURL.append(post)
+        randomPost = random.choice(postURL)
+        if randomPost.url.endswith(imgExtensions):
+            return f"https://rxddit.com{randomPost.permalink}"
+        else:
+            return f"https://embed.works/https://reddit.com{randomPost.permalink}"

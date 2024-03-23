@@ -1,6 +1,6 @@
 # author: @doctorthe113
 # github: https://github.com/Doctorthe113/Athena-BOT
-# version: 1.13.1.1
+# version: 1.13.1.3
 
 
 # built-in libraries
@@ -60,6 +60,8 @@ GOOGLE_API = os.getenv(key="googleAPI")
 CSE_ID = os.getenv(key="searchEngineId")
 NASA_API = os.getenv(key="nasaAPI")
 NINJA_API = os.getenv(key="ninjaAPI")
+REDDIT_CLIENT = os.getenv(key="redditClient")
+REDDIT_SECRET = os.getenv(key="redditSecret")
 EMOJI_REGEX = re.compile(pattern=(r"<:(\w+):(\d+)>"))
 URL_REGEX = re.compile(
     pattern=r"((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z]){2,6}([a-zA-Z0-9\.\&\/\?\:@\-_=#])*"
@@ -524,6 +526,16 @@ async def bucket(ctx, *, arg):
 async def rhyme(ctx, *, arg):
     words = phraseObj.rhyme(NINJA_API, arg)
     await ctx.send(f"__**Here are few words that rhyme with {arg}:**__```\n{words}```")
+
+# for finding reddit posts. eg: "reddit {x}"
+@bot.command()
+async def reddit(ctx, *, arg):
+    validSubReddits = ["cute", "naturegifs", "wholesomememes", "animalsbeingbros", "aww"]
+    if arg.lower() in validSubReddits:
+        result = webSearchObj.reddit(REDDIT_CLIENT, REDDIT_SECRET, arg)
+        await ctx.send(f"[{arg}]({result})")
+    else:
+        await ctx.send("Not a valid subreddit 😔. Run $help to find it :3")
 
 
 

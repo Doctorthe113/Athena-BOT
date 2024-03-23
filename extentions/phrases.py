@@ -264,18 +264,20 @@ __**Command List**__:
 5. `tell me a joke` or `tell me a dad joke` - Ask Athena a dad joke
 6. `check resources` - Check memory and thread usage
 7. `i am bored` - Get a random activity
-8. `what is {x}` or `google {x}` - Get google results
-9. `search for {x} on wikipedia` - Get wikipedia results
-10. `define {x}` - Get dictionary results
-11. `download {x}` - Download youtube videos
+8. `what is {x}` or `google {x}` - Get google results. *eg*: `what is the meaning of life`
+9. `search for {x} on wikipedia` - Get wikipedia results. *eg*: `search for the meaning of life on wikipedia`
+10. `define {x}` - Get dictionary results. *eg*: `define the meaning of life`
+11. `download {x}` - Download youtube videos. *eg*: `download https://www.youtube.com/watch?v=meaningoflife`
 12. `nasa` - Get NASA photo
-13. `agify {x}` - Get age from single-worded name
-14. `dog` - Get a random dog picture
-15. `cat` - Get a random cat picture
+13. `agify {x}` - Get age from single-worded name. *eg*: `agify Doctor`
+14. `dog` - Get a random dog picture. *eg*: `dog`
+15. `cat` - Get a random cat picture. *eg*: `cat`
 16. `cocktail random` or `cocktail {x}` - Get a random cocktail or look for one (WIP)
 17. `fact` - Get a random fact
 18. `bucket list` - Get a random bucket list item
-19. `rhyme {x}` - To find a word that rhymes with another word
+19. `rhyme {x}` - To find a word that rhymes with another word. *eg*: `rhyme life`
+20. `reddit {x}` - Get a random reddit post from valid subreddit. *eg*: `reddit cute`
+Valid subreddits are: `cute`, `naturegifs`, `wholesomememes`, `animalsbeingbros`, `aww`
 
 __**Music**__:
 1. `join` - Join a voice channel
