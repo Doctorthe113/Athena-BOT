@@ -136,7 +136,7 @@ async def on_message(rawMsg):
 
     # *For non-prompt/automated responses
     # translating messages
-    if msgChannelId in translateGuilds:
+    if (msgChannelId in translateGuilds) and filteredMsgLow:
         filteredMsgLowSet = set(filteredMsgLow.split())
         if (translator.detect(filteredMsg).lang != "en" 
                 and not filteredMsgLowSet.intersection(phraseObj.UWUPROMPT)
@@ -223,110 +223,6 @@ async def on_message(rawMsg):
 @bot.command()
 async def ping(ctx):
     await ctx.send(f"Pong! Bot Latency `{round(bot.latency * 1000)}ms`")
-
-# for help. eg: "help"
-@bot.command()
-async def help(ctx):
-    helpMsg = phraseObj.helpMsg
-    await ctx.send(helpMsg)
-    pass
-
-# for a dad joke. eg:"tell me a joke"
-@bot.command()
-async def tell(ctx, *, arg):
-    if not arg.startswith(("me a joke", "me a dad joke")):
-        return None
-    await ctx.send(phraseObj.dad_joke_method())
-
-# for bored. eg: "i am bored"
-@bot.command(aliases = ["I"])
-async def i(ctx, *, arg):
-    if not arg.startswith("am bored"):
-        return None
-    await ctx.send(f"Here's an activity for you: {phraseObj.bored()}")
-
-# for checking resources. eg: "check resources"
-@bot.command()
-async def check(ctx, *, arg):
-    if not arg.startswith("resources"):
-        return None
-    thread = threading.active_count()
-    process = psutil.Process(os.getpid())
-    memoryUsage = process.memory_info().rss / 1048576
-    await ctx.send(f"Thread: {thread}, Memory: {memoryUsage} MB")
-
-# for googling results. eg: "what is x"
-@bot.command()
-async def what(ctx, *, arg):
-    if not arg.startswith("is"):
-        return None
-    query = re.sub("what is", "", arg, flags=re.IGNORECASE)
-    result = webSearchObj.google_search(query)
-    await ctx.send(result)
-
-# for googling results. eg: "google x"
-@bot.command()
-async def google(ctx, *, arg):
-    result = webSearchObj.google_search(arg)
-    await ctx.send(result)
-
-# for searching wikipedia. eg: "search x on wikipedia"
-@bot.command()
-async def search(ctx, *, arg):
-    if not (arg.startswith("for") 
-            and arg.endswith(" on wikipedia")):
-        return None
-    query = re.sub("^for | on wikipedia$", "", arg, flags=re.IGNORECASE)
-    wikiSummary = webSearchObj.wikiSearch(query)[0]
-    relatedArticles = webSearchObj.wikiSearch(query)[1]
-    relatedArticles = "\n".join(relatedArticles)
-    msg = await ctx.reply(f"**__Summary of your query__**: ```\n{wikiSummary}```")
-    await msg.reply(f"**__Related articles__**: ```\n{relatedArticles}```")
-
-# for deleting messages. eg: "purge n"
-@bot.command()
-async def purge(ctx, *, arg):
-    if not (ctx.author.guild_permissions.manage_messages):
-        return None
-    msgCount = arg
-    await ctx.send(f"Purging {msgCount} messages...")
-    await ctx.channel.purge(limit=int(msgCount) + 2)
-
-# for defining words. eg: "define x"
-@bot.command()
-async def define(ctx, *, arg):
-    try:
-        result = webSearchObj.dictionary(arg)
-        await ctx.send(
-                f"### {result[0]} \n"
-                + f"### {result[1]} \n"
-                + f"__Pronounciation__: {result[2]} \n"
-                + f"__Origin__: {result[3]} \n"
-                + f"__Definitions__:{result[4]}"
-            )
-    except:
-        await ctx.send("An error has occured.")
-
-# for downloading videos. eg: "download https://www.youtube.com/watch?v=x"
-@bot.command()
-async def download(ctx, arg):
-    ytdlVid = yt_dlp.YoutubeDL({"format": "best", "outtml": "-", "quiet": True})
-    data = ytdlVid.extract_info(arg, download=False)
-    url = data["url"]
-    msg = await ctx.send("Downloading...")
-    try:
-        response = requests.get(url, timeout=13, stream=True)
-        contentBinary = response.content
-        binaryFileObj = io.BytesIO(contentBinary)
-        video = nextcord.File(binaryFileObj, filename="video.mp4")
-        await msg.reply(file=video)
-    except (
-        nextcord.errors.HTTPException,
-        nextcord.errors.Forbidden,
-        requests.exceptions.Timeout,
-        requests.exceptions.HTTPError,
-    ) as e:
-        await msg.reply(f"An error has occured. {e}")
 
 # for starting music playback. eg: "join"
 @bot.command()
@@ -472,6 +368,110 @@ async def remove(ctx, index):
         await ctx.send(f"Removed __{removedSong}__ from the queue.")
     except:
         await ctx.send(f"I am unable to remove {index}th song 😔")
+
+# for help. eg: "help"
+@bot.command()
+async def help(ctx):
+    helpMsg = phraseObj.helpMsg
+    await ctx.send(helpMsg)
+    pass
+
+# for a dad joke. eg:"tell me a joke"
+@bot.command()
+async def tell(ctx, *, arg):
+    if not arg.startswith(("me a joke", "me a dad joke")):
+        return None
+    await ctx.send(phraseObj.dad_joke_method())
+
+# for bored. eg: "i am bored"
+@bot.command(aliases = ["I"])
+async def i(ctx, *, arg):
+    if not arg.startswith("am bored"):
+        return None
+    await ctx.send(f"Here's an activity for you: {phraseObj.bored()}")
+
+# for checking resources. eg: "check resources"
+@bot.command()
+async def check(ctx, *, arg):
+    if not arg.startswith("resources"):
+        return None
+    thread = threading.active_count()
+    process = psutil.Process(os.getpid())
+    memoryUsage = process.memory_info().rss / 1048576
+    await ctx.send(f"Thread: {thread}, Memory: {memoryUsage} MB")
+
+# for googling results. eg: "what is x"
+@bot.command()
+async def what(ctx, *, arg):
+    if not arg.startswith("is"):
+        return None
+    query = re.sub("what is", "", arg, flags=re.IGNORECASE)
+    result = webSearchObj.google_search(query)
+    await ctx.send(result)
+
+# for googling results. eg: "google x"
+@bot.command()
+async def google(ctx, *, arg):
+    result = webSearchObj.google_search(arg)
+    await ctx.send(result)
+
+# for searching wikipedia. eg: "search x on wikipedia"
+@bot.command()
+async def search(ctx, *, arg):
+    if not (arg.startswith("for") 
+            and arg.endswith(" on wikipedia")):
+        return None
+    query = re.sub("^for | on wikipedia$", "", arg, flags=re.IGNORECASE)
+    wikiSummary = webSearchObj.wikiSearch(query)[0]
+    relatedArticles = webSearchObj.wikiSearch(query)[1]
+    relatedArticles = "\n".join(relatedArticles)
+    msg = await ctx.reply(f"**__Summary of your query__**: ```\n{wikiSummary}```")
+    await msg.reply(f"**__Related articles__**: ```\n{relatedArticles}```")
+
+# for deleting messages. eg: "purge n"
+@bot.command()
+async def purge(ctx, *, arg):
+    if not (ctx.author.guild_permissions.manage_messages):
+        return None
+    msgCount = arg
+    await ctx.send(f"Purging {msgCount} messages...")
+    await ctx.channel.purge(limit=int(msgCount) + 2)
+
+# for defining words. eg: "define x"
+@bot.command()
+async def define(ctx, *, arg):
+    try:
+        result = webSearchObj.dictionary(arg)
+        await ctx.send(
+                f"### {result[0]} \n"
+                + f"### {result[1]} \n"
+                + f"__Pronounciation__: {result[2]} \n"
+                + f"__Origin__: {result[3]} \n"
+                + f"__Definitions__:{result[4]}"
+            )
+    except:
+        await ctx.send("An error has occured.")
+
+# for downloading videos. eg: "download https://www.youtube.com/watch?v=x"
+@bot.command()
+async def download(ctx, arg):
+    ytdlVid = yt_dlp.YoutubeDL({"format": "best", "outtml": "-", "quiet": True})
+    data = ytdlVid.extract_info(arg, download=False)
+    url = data["url"]
+    msg = await ctx.send("Downloading...")
+    try:
+        response = requests.get(url, timeout=13, stream=True)
+        contentBinary = response.content
+        binaryFileObj = io.BytesIO(contentBinary)
+        video = nextcord.File(binaryFileObj, filename="video.mp4")
+        await msg.reply(file=video)
+    except (
+        nextcord.errors.HTTPException,
+        nextcord.errors.Forbidden,
+        requests.exceptions.Timeout,
+        requests.exceptions.HTTPError,
+    ) as e:
+        await msg.reply(f"An error has occured. {e}")
 
 # for NASA images. eg: "nasa"
 @bot.command()
