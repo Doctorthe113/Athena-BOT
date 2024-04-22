@@ -116,13 +116,14 @@ async def on_message(rawMsg):
     filteredMsg = re.sub(URL_REGEX, "", filteredMsg)
     filteredMsgPunc = re.sub(PUNC_REGEX, "", filteredMsg)
     filteredMsgLow = filteredMsgPunc.lower()
+    filteredMsgLowSet = set(filteredMsgLow.split())
 
     # skips if message author is bot itself
     if rawMsg.author == bot.user:
         return None
 
     # skips if message content is none
-    if filteredMsg == None:
+    if not filteredMsg:
         return None
 
     # logging messages
@@ -133,9 +134,9 @@ async def on_message(rawMsg):
 
     # *For non-prompt/automated responses
     # translating messages
-    if (msgChannelId in translateGuilds) and filteredMsgLow:
+    translate = False
+    if msgChannelId in translateGuilds:
         if translator.detect(filteredMsg).lang != "en":
-            filteredMsgLowSet = set(filteredMsgLow.split())
             translate = True
     if (
         translate
@@ -467,8 +468,7 @@ async def define(ctx, *, arg):
 # for downloading videos. eg: "download https://www.youtube.com/watch?v=x"
 @bot.command()
 async def download(ctx, arg):
-    ytdlVid = yt_dlp.YoutubeDL(
-        {"format": "best", "outtml": "-", "quiet": True})
+    ytdlVid = yt_dlp.YoutubeDL({"format": "best", "outtml": "-", "quiet": True})
     data = ytdlVid.extract_info(arg, download=False)
     url = data["url"]
     msg = await ctx.send("Downloading...")
@@ -564,6 +564,18 @@ async def reddit(ctx, *, arg):
         await ctx.send(f"[{arg}]({result})")
     else:
         await ctx.send("Not a valid subreddit 😔. Run $help to find it :3")
+
+
+@bot.command()
+async def update(ctx):
+    if ctx.author.id != 699342617095438479:
+        return None
+    await ctx.send("Updating...")
+    try:
+        os.system("git pull")
+        await ctx.send("Updated!")
+    except:
+        await ctx.send("Unable to update. Please check console!")
 
 
 # * Slash Commands
