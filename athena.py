@@ -467,7 +467,8 @@ async def define(ctx, *, arg):
 # for downloading videos. eg: "download https://www.youtube.com/watch?v=x"
 @bot.command()
 async def download(ctx, arg):
-    ytdlVid = yt_dlp.YoutubeDL({"format": "best", "outtml": "-", "quiet": True})
+    ytdlVid = yt_dlp.YoutubeDL(
+        {"format": "best", "outtml": "-", "quiet": True})
     data = ytdlVid.extract_info(arg, download=False)
     url = data["url"]
     msg = await ctx.send("Downloading...")
