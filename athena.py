@@ -136,21 +136,22 @@ async def on_message(rawMsg):
     # translating messages
     translate = False
     if msgChannelId in translateGuilds:
-        if translator.detect(filteredMsg).lang != "en":
+        if (
+            translator.detect(filteredMsg).lang != "en"
+            and not filteredMsgLowSet.intersection(phraseObj.UWUPROMPT)
+            and not filteredMsgLow.startswith(phraseObj.PREFIX)
+        ):
             translate = True
-    if (
-        translate
-        and not filteredMsgLowSet.intersection(phraseObj.UWUPROMPT)
-        and not filteredMsgLow.startswith(phraseObj.PREFIX)
-    ):
+
+    if translate:
         translation = translator.translate(filteredMsg)
         translationSrc = LANGUAGES.get(translation.src)
-        msg = await rawMsg.reply(
+        replyMsg = await rawMsg.reply(
             f"*__From {translationSrc}__*\n>>> {translation.text}", mention_author=False
         )
-        await msg.add_reaction("❌")
+        await replyMsg.add_reaction("❌")
         if randomChance == 2:
-            await msg.reply(
+            instructMsg = await replyMsg.reply(
                 "(*React with ❌ to delete wrong translations*)", mention_author=False
             )
 
@@ -158,18 +159,25 @@ async def on_message(rawMsg):
             return (
                 user == rawMsg.author
                 and str(reaction.emoji) == "❌"
-                and reaction.message.id == msg.id
+                and reaction.message.id == replyMsg.id
             )
 
         try:
             reaction, user = await bot.wait_for(
-                "reaction_add", timeout=60.0, check=check
+                "reaction_add", timeout=30.0, check=check
             )
-            await msg.delete()
+            await replyMsg.delete()
+            await instructMsg.delete()
         except nextcord.errors.Forbidden as e:
-            await msg.channel.send(f"Error deleting the message: {e}")
-        except asyncio.TimeoutError:
+            await replyMsg.channel.send(f"Error deleting the message: {e}")
+        except UnboundLocalError:
             pass
+        except asyncio.TimeoutError:
+            await replyMsg.remove_reaction("❌", bot.user)
+            try:
+                await instructMsg.delete()
+            except UnboundLocalError:
+                pass
 
     # saying hi/hello
     if filteredMsgLow == phraseObj.GREETINGPROMPT:
