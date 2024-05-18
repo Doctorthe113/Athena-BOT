@@ -627,7 +627,7 @@ async def change_status():
 
 
 # to wish happy birthday
-@tasks.loop(minutes=5)
+@tasks.loop(minutes=15)
 async def birthday_reminder():
     birthdayMessages = [
         "Wishing you a day filled with laughter and joy. May your birthday be as wonderful as you are!",
@@ -650,8 +650,8 @@ async def birthday_reminder():
     if random.randint(1, 3) == 2:
         randomMsg = random.choice(birthdayMessages)
         await birthDayUser.send(randomMsg)
-        docID = await bot.fetch_user(699342617095438479)
-        await docID.send(randomMsg)
+        # docID = await bot.fetch_user(699342617095438479)
+        # await docID.send(randomMsg)
     else:
         return None
 
