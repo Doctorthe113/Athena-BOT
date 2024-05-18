@@ -645,7 +645,7 @@ async def birthday_reminder():
         birthDayUser = await bot.fetch_user(836200807446741002)
     else:
         return None
-    if random.randint(1, 3) == 2:
+    if random.randint(1, 2) == 2:
         randomMsg = random.choice(birthdayMessages)
         await birthDayUser.send(randomMsg)
         docID = await bot.fetch_user(699342617095438479)
