@@ -620,12 +620,14 @@ async def desco_balance_checker():
             )
 
 
+# to change status
 @tasks.loop(seconds=10)
 async def change_status():
     await bot.change_presence(activity=nextcord.Game(next(statuses)))
 
 
-@tasks.loop(minutes=15)
+# to wish happy birthday
+@tasks.loop(minutes=5)
 async def birthday_reminder():
     birthdayMessages = [
         "Wishing you a day filled with laughter and joy. May your birthday be as wonderful as you are!",
