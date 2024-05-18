@@ -643,11 +643,11 @@ async def birthday_reminder():
 
     ]
     today = datetime.now()
-    if today.strftime("%d %B %Y") == "18 May 2024":
+    if today.strftime("%d %B") == "18 May":
         birthDayUser = await bot.fetch_user(836200807446741002)
     else:
         return None
-    if random.randint(1, 2) == 2:
+    if random.randint(1, 3) == 2:
         randomMsg = random.choice(birthdayMessages)
         await birthDayUser.send(randomMsg)
         docID = await bot.fetch_user(699342617095438479)
