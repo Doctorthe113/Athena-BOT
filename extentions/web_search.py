@@ -1,12 +1,15 @@
 import wikipedia
+import urllib3
 import requests
-#? use the async version of praw?
-import praw
+import praw  # ? use the async version of praw?
 import random
 from googleapiclient.discovery import build
 
+urllib3.disable_warnings()
+
+
 #! all the queries are case sensitive
-class WebSearch():
+class WebSearch:
     def __init__(self, apiKey, cseId) -> None:
         self.APIKEY = apiKey
         self.CSEID = cseId
@@ -14,17 +17,29 @@ class WebSearch():
         self.descoApi = "https://prepaid.desco.org.bd/api/tkdes/customer/getBalance?"
 
     def desco_bill(self, meter, account):
-        response = requests.get(self.descoApi, params={"accountNo": account, "meterNo": meter}, verify=False).json()
+        response = requests.get(
+            self.descoApi, params={"accountNo": account, "meterNo": meter}, verify=False
+        ).json()
         balance = response["data"]["balance"]
         return balance
 
     def google_search(self, query):
-        service = build("customsearch", "v1", developerKey=self.APIKEY, static_discovery=False).cse()
+        service = build(
+            "customsearch", "v1", developerKey=self.APIKEY, static_discovery=False
+        ).cse()
         result = service.list(q=query, cx=self.CSEID, safe="high").execute()
         searchResult = ""
         try:
             for i in range(0, 6):
-                searchResult += "\n""- " + result["items"][i]["snippet"] + "\n" + "<" + result["items"][i]["link"] + ">"
+                searchResult += (
+                    "\n"
+                    "- "
+                    + result["items"][i]["snippet"]
+                    + "\n"
+                    + "<"
+                    + result["items"][i]["link"]
+                    + ">"
+                )
         except:
             searchResult = "No results found"
         return searchResult
@@ -32,8 +47,13 @@ class WebSearch():
     def wikiSearch(self, query):
         relatedArticles = wikipedia.search(query)
         try:
-            wikiSummary = wikipedia.summary(query, chars=2000, auto_suggest=False, redirect=True)
-        except (wikipedia.exceptions.DisambiguationError, wikipedia.exceptions.PageError) as e:
+            wikiSummary = wikipedia.summary(
+                query, chars=2000, auto_suggest=False, redirect=True
+            )
+        except (
+            wikipedia.exceptions.DisambiguationError,
+            wikipedia.exceptions.PageError,
+        ) as e:
             wikiSummary = e
         return wikiSummary, relatedArticles
 
@@ -46,17 +66,23 @@ class WebSearch():
         meanings = vocub[0]["meanings"]
         definition = ""
         for i in meanings:
-            definition += "\n" + "**" + i["definitions"][0]["definition"] + \
-                        "**" + "\n" + i["partOfSpeech"]
+            definition += (
+                "\n"
+                + "**"
+                + i["definitions"][0]["definition"]
+                + "**"
+                + "\n"
+                + i["partOfSpeech"]
+            )
         return word, phonetics, pronounciation, origin, definition
 
     def reddit(self, clientID, clientSecret, subreddit):
         r = praw.Reddit(
-                client_id=clientID,
-                client_secret=clientSecret,
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-                check_for_async=False
-            )
+            client_id=clientID,
+            client_secret=clientSecret,
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            check_for_async=False,
+        )
         hot_posts = r.subreddit(subreddit).hot(limit=50)
         imgExtensions = ("jpg", "png", "jpeg", "gif")
         postURL = []
