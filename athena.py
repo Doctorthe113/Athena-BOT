@@ -29,7 +29,6 @@ from datetime import datetime
 
 from extentions.phrases import Phrase
 from extentions.web_search import WebSearch
-from extentions.desco import DescoAPI
 from extentions.queue_check import (
     queue_check,
     queue_del,
