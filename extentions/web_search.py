@@ -11,6 +11,12 @@ class WebSearch():
         self.APIKEY = apiKey
         self.CSEID = cseId
         self.dictionaryApi = "https://api.dictionaryapi.dev/api/v2/entries/en/"
+        self.descoApi = "https://prepaid.desco.org.bd/api/tkdes/customer/getBalance?"
+
+    def desco_bill(self, meter, account):
+        response = requests.get(self.descoApi, params={"accountNo": account, "meterNo": meter}, verify=False).json()
+        balance = response["data"]["balance"]
+        return balance
 
     def google_search(self, query):
         service = build("customsearch", "v1", developerKey=self.APIKEY, static_discovery=False).cse()

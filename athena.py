@@ -610,13 +610,11 @@ async def feedback(interaction: Interaction, arg: str):
 @tasks.loop(hours=12)
 async def desco_balance_checker():
     docID = await bot.fetch_user(699342617095438479)
-    for i in (12021574, 12021575):
-        balance = DescoAPI(i).balanceCheck()["balance"]
-        monthlyUse = DescoAPI(i).balanceCheck()["currentMonthConsumption"]
+    for i in ((661120206515, 12021574), (661120206516, 12021575)):
+        balance = webSearchObj.desco_bill(i[0], i[1])
         if int(balance) <= 250:
             await docID.send(
-                f"Heyy, {balance}৳ Balance left in {i}. \n"
-                + f"This month's consumption upto today is {monthlyUse}৳."
+                f"Heyy, {balance}৳ Balance left in {i[1]}."
             )
 
 
@@ -660,18 +658,18 @@ async def before_desco_balance_checker():
     await bot.wait_until_ready()
 
 
-@change_status.before_loop
-async def before_change_status():
-    await bot.wait_until_ready()
+# @change_status.before_loop
+# async def before_change_status():
+#     await bot.wait_until_ready()
 
 
-@birthday_reminder.before_loop
-async def before_birthday_reminder():
-    await bot.wait_until_ready()
+# @birthday_reminder.before_loop
+# async def before_birthday_reminder():
+#     await bot.wait_until_ready()
 
 
 if __name__ == "__main__":
     desco_balance_checker.start()
-    change_status.start()
-    birthday_reminder.start()
+    # change_status.start()
+    # birthday_reminder.start()
     bot.run(TOKEN)
