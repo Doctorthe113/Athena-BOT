@@ -25,7 +25,6 @@ from nextcord.ext import tasks, commands
 from googletrans import Translator, LANGUAGES
 from ytmusicapi import YTMusic
 from dotenv import load_dotenv
-from datetime import datetime
 
 from extentions.phrases import Phrase
 from extentions.web_search import WebSearch
@@ -612,9 +611,7 @@ async def desco_balance_checker():
     for i in ((661120206515, 12021574), (661120206516, 12021575)):
         balance = webSearchObj.desco_bill(i[0], i[1])
         if int(balance) <= 250:
-            await docID.send(
-                f"Heyy, {balance}৳ Balance left in {i[1]}."
-            )
+            await docID.send(f"Heyy, {balance}৳ Balance left in {i[1]}.")
 
 
 # to change status
@@ -624,7 +621,7 @@ async def change_status():
 
 
 # to wish happy birthday
-@tasks.loop(minutes=15)
+@tasks.loop(seconds=30)
 async def birthday_reminder():
     birthdayMessages = [
         "Wishing you a day filled with laughter and joy. May your birthday be as wonderful as you are!",
@@ -636,21 +633,24 @@ async def birthday_reminder():
         "Hope your birthday is just the beginning of a year full of happiness and success. Have a great day ahead!",
         "Happy Birthday! May each hour and minute be filled with delight, and your special day be perfect!",
         "On your birthday, I wish you a lifetime of joy, a smaller amount of worries, and a boatload of big dreams coming true.",
-        "A toast to you on your birthday! May you live to be old and toothless, surrounded by love and joy forever."
-
+        "A toast to you on your birthday! May you live to be old and toothless, surrounded by love and joy forever.",
     ]
-    today = datetime.now()
-    if today.strftime("%d %B") == "18 May":
+    today = datetime.datetime.now(datetime.UTC)
+    today = today.strftime("%d %B %H:%M")
+    if today == "18 May 00:00":
         birthDayUser = await bot.fetch_user(836200807446741002)
+    elif today == "03 June 00:00":
+        birthDayUser = await bot.fetch_user(820476981480914984)
     else:
         return None
-    if random.randint(1, 3) == 2:
-        randomMsg = random.choice(birthdayMessages)
-        await birthDayUser.send(randomMsg)
-        # docID = await bot.fetch_user(699342617095438479)
-        # await docID.send(randomMsg)
-    else:
-        return None
+    # if random.randint(1, 3) == 2:
+    randomMsg = random.choice(birthdayMessages)
+    await birthDayUser.send(randomMsg)
+    docID = await bot.fetch_user(699342617095438479)
+    await docID.send(randomMsg)
+    # else:
+    #     return None
+
 
 @desco_balance_checker.before_loop
 async def before_desco_balance_checker():
