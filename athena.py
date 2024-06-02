@@ -88,7 +88,7 @@ bot.remove_command("help")
 
 @bot.event
 async def on_ready():
-    loginTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    loginTime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     global logChannel
     logChannel = await bot.fetch_channel(1115589968929239153)
@@ -106,7 +106,7 @@ async def on_message(rawMsg):
     dadJokeGuilds = guilds["dadPrompts"]
     uwuGuilds = guilds["uwuPrompts"]
 
-    currentTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    currentTime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     msgChannelId = rawMsg.channel.id
     randomChance = random.randint(1, 10)
 
