@@ -10,6 +10,7 @@ from itertools import cycle
 import os
 import json
 import re
+import sys
 import threading
 import random
 
@@ -579,8 +580,10 @@ async def update(ctx):
         return None
     await ctx.send("Updating...")
     try:
+        currentProccess = sys.executable
         os.system("git pull")
         await ctx.send("Updated!")
+        os.execl(currentProccess, currentProccess, *sys.argv)
     except:
         await ctx.send("Unable to update. Please check console!")
 
