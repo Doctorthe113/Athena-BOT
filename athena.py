@@ -25,7 +25,8 @@ from nextcord import Interaction
 from nextcord.ext import tasks, commands
 from googletrans import Translator, LANGUAGES
 from ytmusicapi import YTMusic
-from dotenv import load_dotenv
+
+# from dotenv import load_dotenv
 
 from extentions.phrases import Phrase
 from extentions.web_search import WebSearch
@@ -41,7 +42,7 @@ from extentions.queue_check import (
 )
 from extentions.nasa import Nasa
 
-load_dotenv()
+# load_dotenv()
 
 
 # * loading global variables
