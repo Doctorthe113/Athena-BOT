@@ -102,7 +102,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(rawMsg):
-    with open("guild.json", "r") as foo:
+    with open("./extensions/guild.json", "r") as foo:
         guilds = json.load(foo)
     translateGuilds = guilds["translate"]
     dadJokeGuilds = guilds["dadPrompts"]
