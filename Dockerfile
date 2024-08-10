@@ -18,7 +18,4 @@ RUN python3 -m venv .venv
 RUN . .venv/bin/activate
 RUN .venv/bin/pip install --no-cache-dir --upgrade -r requirements.txt
 
-# RUN chmod +x setup.sh
-# RUN ./setup.sh
-
 CMD [".venv/bin/python", "athena.py"]

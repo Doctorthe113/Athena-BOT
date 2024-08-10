@@ -1,6 +1,6 @@
 # author: @doctorthe113
 # github: https://github.com/Doctorthe113/Athena-BOT
-# version: 1.13.1.6
+# version: 1.13.2
 
 
 # built-in libraries
@@ -15,6 +15,7 @@ import threading
 import random
 
 # external libraries and apis
+from discord import Guild
 import nextcord
 import psutil
 import requests
@@ -26,11 +27,11 @@ from nextcord.ext import tasks, commands
 from googletrans import Translator, LANGUAGES
 from ytmusicapi import YTMusic
 
-# from dotenv import load_dotenv
-
-from extentions.phrases import Phrase
-from extentions.web_search import WebSearch
-from extentions.queue_check import (
+# custom/local modules
+from extentions import (
+    Phrase,
+    WebSearch,
+    Nasa,
     queue_check,
     queue_del,
     queue_grab,
@@ -40,10 +41,10 @@ from extentions.queue_check import (
     queue_remove,
     queue_shuffle,
 )
-from extentions.nasa import Nasa
+
+# from dotenv import load_dotenv
 
 # load_dotenv()
-
 
 # * loading global variables
 vcs = {}  # {guild_id: voice_client_object}
@@ -102,11 +103,12 @@ async def on_ready():
 
 @bot.event
 async def on_message(rawMsg):
-    with open("./extensions/guild.json", "r") as foo:
+    with open("./db/guild.json", "r") as foo:
         guilds = json.load(foo)
     translateGuilds = guilds["translate"]
     dadJokeGuilds = guilds["dadPrompts"]
     uwuGuilds = guilds["uwuPrompts"]
+    logGuilds = guilds["logs"]
 
     currentTime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     msgChannelId = rawMsg.channel.id
@@ -128,7 +130,7 @@ async def on_message(rawMsg):
         return None
 
     # logging messages
-    if rawMsg.channel != logChannel:
+    if rawMsg.channel != logChannel and msgChannelId not in logGuilds:
         await logChannel.send(
             f"{currentTime}: {rawMsg.author.name} -> {rawMsg.content}"
         )
@@ -583,6 +585,7 @@ async def update(ctx):
     try:
         currentProccess = sys.executable
         os.system("git pull")
+        os.system("pip install -r requirements.txt")
         await ctx.send("Updated!")
         os.execl(currentProccess, currentProccess, *sys.argv)
     except:
@@ -608,6 +611,96 @@ async def feedback(interaction: Interaction, arg: str):
         )
 
 
+# disables logging in a specific channel
+@bot.slash_command(name="log", description="Enables/Disables logging in this channel")
+async def log(interaction: Interaction):
+    if not (
+        interaction.user.guild_permissions.manage_guild
+        or interaction.user.id == 699342617095438479
+    ):
+        return await interaction.response.send_message(
+            "You don't have permission to use this command!", ephemeral=True
+        )
+
+    with open("./db/guild.json", "r") as foo:
+        guilds = json.load(foo)
+    if interaction.channel.id in guilds["logs"]:
+        guilds["logs"].remove(interaction.channel.id)
+        with open("./db/guild.json", "w") as foo:
+            json.dump(guilds, foo, indent=4)
+        return await interaction.response.send_message(
+            "Logging was disables, now enabled.", ephemeral=True
+        )
+
+    guilds["logs"].append(interaction.channel.id)
+    with open("./db/guild.json", "w") as foo:
+        json.dump(guilds, foo, indent=4)
+    return await interaction.response.send_message(
+        "Logging was enabled, now disabled.", ephemeral=True
+    )
+
+
+# disables uwu roasts in a specific channel
+@bot.slash_command(
+    name="uwu", description="Enables/Disables uwu roasts in this channel"
+)
+async def log(interaction: Interaction):
+    if not (
+        interaction.user.guild_permissions.manage_guild
+        or interaction.user.id == 699342617095438479
+    ):
+        return await interaction.response.send_message(
+            "You don't have permission to use this command!", ephemeral=True
+        )
+
+    with open("./db/guild.json", "r") as foo:
+        guilds = json.load(foo)
+    if interaction.channel.id in guilds["uwuPrompts"]:
+        guilds["uwuPrompts"].remove(interaction.channel.id)
+        with open("./db/guild.json", "w") as foo:
+            json.dump(guilds, foo, indent=4)
+        return await interaction.response.send_message(
+            "UwU roasts were disables, now enabled.", ephemeral=True
+        )
+
+    guilds["uwuPrompts"].append(interaction.channel.id)
+    with open("./db/guild.json", "w") as foo:
+        json.dump(guilds, foo, indent=4)
+    return await interaction.response.send_message(
+        "UwU roasts were enabled, now disabled.", ephemeral=True
+    )
+
+
+#  disables dad jokes in a specific channel
+@bot.slash_command(name="dad", description="Enables/Disables dad jokes in this channel")
+async def log(interaction: Interaction):
+    if not (
+        interaction.user.guild_permissions.manage_guild
+        or interaction.user.id == 699342617095438479
+    ):
+        return await interaction.response.send_message(
+            "You don't have permission to use this command!", ephemeral=True
+        )
+
+    with open("./db/guild.json", "r") as foo:
+        guilds = json.load(foo)
+    if interaction.channel.id in guilds["dadPrompts"]:
+        guilds["dadPrompts"].remove(interaction.channel.id)
+        with open("./db/guild.json", "w") as foo:
+            json.dump(guilds, foo, indent=4)
+        return await interaction.response.send_message(
+            "Dad jokes were disables, now enabled.", ephemeral=True
+        )
+
+    guilds["dadPrompts"].append(interaction.channel.id)
+    with open("./db/guild.json", "w") as foo:
+        json.dump(guilds, foo, indent=4)
+    return await interaction.response.send_message(
+        "Dad jokes were enabled, now disabled.", ephemeral=True
+    )
+
+
+# * Other functions that needs to run periodically
 # check my electric meter balance
 @tasks.loop(hours=12)
 async def desco_balance_checker():
@@ -618,52 +711,52 @@ async def desco_balance_checker():
             await docID.send(f"Heyy, {balance}৳ Balance left in {i[1]}.")
 
 
+@desco_balance_checker.before_loop
+async def before_desco_balance_checker():
+    await bot.wait_until_ready()
+
+
 # to change status
 @tasks.loop(seconds=10)
 async def change_status():
     await bot.change_presence(activity=nextcord.Game(next(statuses)))
 
 
-# to wish happy birthday
-@tasks.loop(seconds=30)
-async def birthday_reminder():
-    birthdayMessages = [
-        "Wishing you a day filled with laughter and joy. May your birthday be as wonderful as you are!",
-        "Happy Birthday! May your special day be packed with all the happiness, peace, and love you deserve.",
-        "On your birthday, I hope that you sit back and relax, let joy and tranquility take the lead, and make this day one to remember!",
-        "Cheers to another year of fabulous you! Keep shining and spreading positivity. Happy Birthday!",
-        "May your birthday be the start of a year filled with good luck, good health, and much happiness.",
-        "Sending you smiles for every moment of your special day. Have a wonderful time and a very happy birthday!",
-        "Hope your birthday is just the beginning of a year full of happiness and success. Have a great day ahead!",
-        "Happy Birthday! May each hour and minute be filled with delight, and your special day be perfect!",
-        "On your birthday, I wish you a lifetime of joy, a smaller amount of worries, and a boatload of big dreams coming true.",
-        "A toast to you on your birthday! May you live to be old and toothless, surrounded by love and joy forever.",
-    ]
-    today = datetime.datetime.now(datetime.UTC)
-    today = today.strftime("%d %B %H:%M")
-    if today == "18 May 00:00":
-        birthDayUser = await bot.fetch_user(836200807446741002)
-    elif today == "03 June 00:00":
-        birthDayUser = await bot.fetch_user(820476981480914984)
-    else:
-        return None
-    # if random.randint(1, 3) == 2:
-    randomMsg = random.choice(birthdayMessages)
-    await birthDayUser.send(randomMsg)
-    docID = await bot.fetch_user(699342617095438479)
-    await docID.send(randomMsg)
-    # else:
-    #     return None
-
-
-@desco_balance_checker.before_loop
-async def before_desco_balance_checker():
+@change_status.before_loop
+async def before_change_status():
     await bot.wait_until_ready()
 
 
-# @change_status.before_loop
-# async def before_change_status():
-#     await bot.wait_until_ready()
+# # to wish happy birthday
+# @tasks.loop(seconds=30)
+# async def birthday_reminder():
+#     birthdayMessages = [
+#         "Wishing you a day filled with laughter and joy. May your birthday be as wonderful as you are!",
+#         "Happy Birthday! May your special day be packed with all the happiness, peace, and love you deserve.",
+#         "On your birthday, I hope that you sit back and relax, let joy and tranquility take the lead, and make this day one to remember!",
+#         "Cheers to another year of fabulous you! Keep shining and spreading positivity. Happy Birthday!",
+#         "May your birthday be the start of a year filled with good luck, good health, and much happiness.",
+#         "Sending you smiles for every moment of your special day. Have a wonderful time and a very happy birthday!",
+#         "Hope your birthday is just the beginning of a year full of happiness and success. Have a great day ahead!",
+#         "Happy Birthday! May each hour and minute be filled with delight, and your special day be perfect!",
+#         "On your birthday, I wish you a lifetime of joy, a smaller amount of worries, and a boatload of big dreams coming true.",
+#         "A toast to you on your birthday! May you live to be old and toothless, surrounded by love and joy forever.",
+#     ]
+#     today = datetime.datetime.now(datetime.UTC)
+#     today = today.strftime("%d %B %H:%M")
+#     if today == "18 May 00:00":
+#         birthDayUser = await bot.fetch_user(836200807446741002)
+#     elif today == "03 June 00:00":
+#         birthDayUser = await bot.fetch_user(820476981480914984)
+#     else:
+#         return None
+#     # if random.randint(1, 3) == 2:
+#     randomMsg = random.choice(birthdayMessages)
+#     await birthDayUser.send(randomMsg)
+#     docID = await bot.fetch_user(699342617095438479)
+#     await docID.send(randomMsg)
+#     # else:
+#     #     return None
 
 
 # @birthday_reminder.before_loop
@@ -673,6 +766,6 @@ async def before_desco_balance_checker():
 
 if __name__ == "__main__":
     desco_balance_checker.start()
-    # change_status.start()
+    change_status.start()
     # birthday_reminder.start()
     bot.run(TOKEN)
