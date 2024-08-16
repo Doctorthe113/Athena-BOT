@@ -584,10 +584,10 @@ async def update(ctx):
     await ctx.send("Updating...")
     try:
         currentProccess = sys.executable
-        os.system("git stash push -m 'temp db stash' ./db/*")
         dbBakChannel = await bot.fetch_channel(1274034997086654486)
         await dbBakChannel.send(file=nextcord.File("./db/ping-res.json"))
         await dbBakChannel.send(file=nextcord.File("./db/guild.json"))
+        os.system("git stash push -m 'temp db stash' ./db/*")
         os.system("git pull -f")
         os.system("git stash pop")
         await ctx.send("Updated!")
