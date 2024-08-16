@@ -633,7 +633,7 @@ async def log(interaction: Interaction):
         with open("./db/guild.json", "w") as foo:
             json.dump(guilds, foo, indent=4)
         return await interaction.response.send_message(
-            "Logging was disables, now enabled.", ephemeral=True
+            "Logging was disabled, now enabled.", ephemeral=True
         )
 
     guilds["logs"].append(interaction.channel.id)
