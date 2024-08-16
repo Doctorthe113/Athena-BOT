@@ -6,16 +6,16 @@
 # built-in libraries
 import asyncio
 import io
-from itertools import cycle
 import os
 import json
 import re
 import sys
 import threading
 import random
+from itertools import cycle
+from collections import OrderedDict
 
 # external libraries and apis
-from discord import Guild
 import nextcord
 import psutil
 import requests
@@ -553,7 +553,7 @@ async def bucket(ctx, *, arg):
     await ctx.send(phraseObj.bucket_list(NINJA_API))
 
 
-# for finiding rhyming words. eg: "rhyme"
+# for finding rhyming words. eg: "rhyme"
 @bot.command()
 async def rhyme(ctx, *, arg):
     words = phraseObj.rhyme(NINJA_API, arg)
@@ -704,11 +704,11 @@ async def log(interaction: Interaction):
 # check my electric meter balance
 @tasks.loop(hours=12)
 async def desco_balance_checker():
-    docID = await bot.fetch_user(699342617095438479)
+    descoChannel = await bot.fetch_channel(1273571248554905621)
     for i in ((661120206515, 12021574), (661120206516, 12021575)):
         balance = webSearchObj.desco_bill(i[0], i[1])
         if int(balance) <= 250:
-            await docID.send(f"Heyy, {balance}৳ Balance left in {i[1]}.")
+            await descoChannel.send(f"Balance {balance} left in {i[1]}")
 
 
 @desco_balance_checker.before_loop
@@ -725,6 +725,75 @@ async def change_status():
 @change_status.before_loop
 async def before_change_status():
     await bot.wait_until_ready()
+
+
+# @tasks.loop(hours=1)
+# async def ping_doc():
+#     pingChannel = await bot.fetch_channel(1273569772407226400)
+#     pingMsg = await pingChannel.send(
+#         f"Pinging <@699342617095438479>! Please react if you are okay."
+#     )
+#     await pingMsg.add_reaction("✅")
+
+#     def db_check():
+#         global missedWeek, missedMonth, missedThreeMonths
+#         missedDay = 0
+#         missedWeek = False
+#         missedMonth = False
+#         missedThreeMonths = False
+#         todayDate = datetime.datetime.now().strftime("%Y-%m-%d %H")
+
+#         with open("./db/ping-res.json", "r") as foo:
+#             pingDb = json.load(foo)
+
+#         with open("./db/ping-res.json", "w") as foo:
+#             pingDb.update({todayDate: False})
+#             json.dump(pingDb, foo, indent=4)
+
+#         newPingDb = OrderedDict(pingDb)
+#         for key, value in reversed(newPingDb.items()):
+#             if not value:
+#                 missedDay += 1
+#             else:
+#                 missedDay = 0
+#                 break
+
+#             if missedDay == 7:
+#                 missedWeek = True
+#             if missedDay == 30:
+#                 missedMonth = True
+#             if missedDay == 90:
+#                 missedThreeMonths = True
+
+#         return missedWeek, missedMonth, missedThreeMonths
+
+#     def check(reaction, user):
+#         return user != bot.user and str(reaction.emoji) == "✅"
+
+#     try:
+#         reaction, user = await bot.wait_for("reaction_add", timeout=30.0, check=check)
+#         await pingMsg.edit(content="Response recieved. Thank you!")
+#     except asyncio.TimeoutError:
+#         await pingMsg.edit(content="No response. Adding it to the DB!")
+#         missedWeek, missedMonth, missedThreeMonths = db_check()
+
+#         if missedWeek:
+#             await pingChannel.send(
+#                 "Missed ping in the last week! Assuming you were busy!"
+#             )
+#         if missedMonth:
+#             await pingChannel.send(
+#                 "Missed ping in the last month! Assuming you are in trouble!"
+#             )
+#         if missedThreeMonths:
+#             await pingChannel.send(
+#                 "Missed ping in the last 3 months! Assuming you are dead!"
+#             )
+
+
+# @ping_doc.before_loop
+# async def before_ping_doc():
+#     await bot.wait_until_ready()
 
 
 # # to wish happy birthday
@@ -767,5 +836,6 @@ async def before_change_status():
 if __name__ == "__main__":
     desco_balance_checker.start()
     change_status.start()
+    # ping_doc.start()
     # birthday_reminder.start()
     bot.run(TOKEN)
