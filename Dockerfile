@@ -9,9 +9,9 @@ RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master
 WORKDIR /home/athena
 COPY . .
 
-RUN git checkout master
+RUN git checkout prod
 RUN git fetch
-RUN git reset --hard origin/master
+RUN git reset --hard origin/prod
 RUN git pull
 
 RUN python3 -m venv .venv

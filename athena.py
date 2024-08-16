@@ -584,8 +584,11 @@ async def update(ctx):
     await ctx.send("Updating...")
     try:
         currentProccess = sys.executable
-        os.system("git pull")
-        os.system("pip install -r requirements.txt")
+        os.system("git stash push -m 'temp db stash' ./db/*")
+        await ctx.send(file=nextcord.File("./db/ping-res.json"))
+        await ctx.send(file=nextcord.File("./db/guild.json"))
+        os.system("git pull -f")
+        os.system("git stash apply")
         await ctx.send("Updated!")
         os.execl(currentProccess, currentProccess, *sys.argv)
     except:
