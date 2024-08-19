@@ -42,9 +42,9 @@ from extentions import (
     queue_shuffle,
 )
 
-# from dotenv import load_dotenv
+from dotenv import load_dotenv
 
-# load_dotenv()
+load_dotenv()
 
 # * loading global variables
 vcs = {}  # {guild_id: voice_client_object}
@@ -731,73 +731,79 @@ async def before_change_status():
     await bot.wait_until_ready()
 
 
-# @tasks.loop(hours=1)
-# async def ping_doc():
-#     pingChannel = await bot.fetch_channel(1273569772407226400)
-#     pingMsg = await pingChannel.send(
-#         f"Pinging <@699342617095438479>! Please react if you are okay."
-#     )
-#     await pingMsg.add_reaction("✅")
+@tasks.loop(hours=24)
+async def ping_doc():
+    pingChannel = await bot.fetch_channel(1273569772407226400)
+    pingMsg = await pingChannel.send(
+        f"Pinging <@699342617095438479>! Please react if you are okay."
+    )
+    await pingMsg.add_reaction("✅")
 
-#     def db_check():
-#         global missedWeek, missedMonth, missedThreeMonths
-#         missedDay = 0
-#         missedWeek = False
-#         missedMonth = False
-#         missedThreeMonths = False
-#         todayDate = datetime.datetime.now().strftime("%Y-%m-%d %H")
+    def db_check(ping):
+        global missedWeek, missedMonth, missedThreeMonths
+        missedDay = 0
+        missedWeek = False
+        missedMonth = False
+        missedThreeMonths = False
+        todayDate = datetime.datetime.now().strftime("%Y-%m-%d")
 
-#         with open("./db/ping-res.json", "r") as foo:
-#             pingDb = json.load(foo)
+        with open("./db/ping-res.json", "r") as foo:
+            pingDb = json.load(foo)
 
-#         with open("./db/ping-res.json", "w") as foo:
-#             pingDb.update({todayDate: False})
-#             json.dump(pingDb, foo, indent=4)
+        with open("./db/ping-res.json", "w") as foo:
+            pingDb.update({todayDate: ping})
+            json.dump(pingDb, foo, indent=4)
 
-#         newPingDb = OrderedDict(pingDb)
-#         for key, value in reversed(newPingDb.items()):
-#             if not value:
-#                 missedDay += 1
-#             else:
-#                 missedDay = 0
-#                 break
+        if ping:
+            return None
 
-#             if missedDay == 7:
-#                 missedWeek = True
-#             if missedDay == 30:
-#                 missedMonth = True
-#             if missedDay == 90:
-#                 missedThreeMonths = True
+        newPingDb = OrderedDict(pingDb)
+        for key, value in reversed(newPingDb.items()):
+            if not value:
+                missedDay += 1
+            else:
+                missedDay = 0
+                break
 
-#         return missedWeek, missedMonth, missedThreeMonths
+            if missedDay == 7:
+                missedWeek = True
+            if missedDay == 30:
+                missedMonth = True
+            if missedDay == 90:
+                missedThreeMonths = True
 
-#     def check(reaction, user):
-#         return user != bot.user and str(reaction.emoji) == "✅"
+        return missedWeek, missedMonth, missedThreeMonths
 
-#     try:
-#         reaction, user = await bot.wait_for("reaction_add", timeout=30.0, check=check)
-#         await pingMsg.edit(content="Response recieved. Thank you!")
-#     except asyncio.TimeoutError:
-#         await pingMsg.edit(content="No response. Adding it to the DB!")
-#         missedWeek, missedMonth, missedThreeMonths = db_check()
+    def check(reaction, user):
+        return user != bot.user and str(reaction.emoji) == "✅"
 
-#         if missedWeek:
-#             await pingChannel.send(
-#                 "Missed ping in the last week! Assuming you were busy!"
-#             )
-#         if missedMonth:
-#             await pingChannel.send(
-#                 "Missed ping in the last month! Assuming you are in trouble!"
-#             )
-#         if missedThreeMonths:
-#             await pingChannel.send(
-#                 "Missed ping in the last 3 months! Assuming you are dead!"
-#             )
+    try:
+        reaction, user = await bot.wait_for(
+            "reaction_add", timeout=28800.0, check=check
+        )
+        db_check(True)
+        await pingMsg.edit(content="Response recieved. Thank you!")
+    except asyncio.TimeoutError:
+        await pingMsg.edit(content="No response. Adding it to the DB!")
+        missedWeek, missedMonth, missedThreeMonths = db_check(False)
+
+        if missedWeek:
+            await pingChannel.send(
+                "Missed ping in the last week! Assuming you were busy!"
+            )
+        if missedMonth:
+            await pingChannel.send(
+                "Missed ping in the last month! Assuming you are in trouble!"
+            )
+        if missedThreeMonths:
+            await pingChannel.send(
+                "Missed ping in the last 3 months! Assuming you are dead!"
+            )
 
 
-# @ping_doc.before_loop
-# async def before_ping_doc():
-#     await bot.wait_until_ready()
+@ping_doc.before_loop
+async def before_ping_doc():
+    await bot.wait_until_ready()
 
 
 # # to wish happy birthday
@@ -840,6 +846,6 @@ async def before_change_status():
 if __name__ == "__main__":
     desco_balance_checker.start()
     change_status.start()
-    # ping_doc.start()
+    ping_doc.start()
     # birthday_reminder.start()
     bot.run(TOKEN)
