@@ -1,6 +1,7 @@
 .env
 .env(prod)
 .venv/
+db.bak/
 test.ipynb
 test.py
 __pycache__/
