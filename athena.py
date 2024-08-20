@@ -42,9 +42,9 @@ from extentions import (
     queue_shuffle,
 )
 
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
-load_dotenv()
+# load_dotenv()
 
 # * loading global variables
 vcs = {}  # {guild_id: voice_client_object}
@@ -733,29 +733,27 @@ async def before_change_status():
 
 @tasks.loop(hours=24)
 async def ping_doc():
+    todayDate = datetime.datetime.now().strftime("%Y-%m-%d")
     pingChannel = await bot.fetch_channel(1273569772407226400)
-    pingMsg = await pingChannel.send(
-        f"Pinging <@699342617095438479>! Please react if you are okay."
-    )
-    await pingMsg.add_reaction("✅")
 
-    def db_check(ping):
+    # check if today's entry in db or not. `init = true` to check for today's entry
+    # `init = false` to check for previous days entry
+    def db_check(init):
+        with open("./db/ping-res.json", "r") as foo:
+            pingDb = json.load(foo)
+
+        if init:
+            if todayDate in pingDb:
+                return True
+            else:
+                return False
+
+        # checks for previous days entry
         global missedWeek, missedMonth, missedThreeMonths
         missedDay = 0
         missedWeek = False
         missedMonth = False
         missedThreeMonths = False
-        todayDate = datetime.datetime.now().strftime("%Y-%m-%d")
-
-        with open("./db/ping-res.json", "r") as foo:
-            pingDb = json.load(foo)
-
-        with open("./db/ping-res.json", "w") as foo:
-            pingDb.update({todayDate: ping})
-            json.dump(pingDb, foo, indent=4)
-
-        if ping:
-            return None
 
         newPingDb = OrderedDict(pingDb)
         for key, value in reversed(newPingDb.items()):
@@ -774,17 +772,34 @@ async def ping_doc():
 
         return missedWeek, missedMonth, missedThreeMonths
 
+    # write today's entry in db
+    def db_write(ping):
+        with open("./db/ping-res.json", "r") as foo:
+            pingDb = json.load(foo)
+
+        with open("./db/ping-res.json", "w") as foo:
+            pingDb.update({todayDate: ping})
+            json.dump(pingDb, foo, indent=4)
+
+    # check if user responded or not
     def check(reaction, user):
         return user != bot.user and str(reaction.emoji) == "✅"
 
+    # first checks if there's an entry for today or not
+    if db_check(True):
+        return None
+    pingMsg = await pingChannel.send(
+        f"Pinging <@699342617095438479>! Please react if you are okay."
+    )
+    await pingMsg.add_reaction("✅")
+
     try:
-        reaction, user = await bot.wait_for(
-            "reaction_add", timeout=28800.0, check=check
-        )
-        db_check(True)
+        reaction, user = await bot.wait_for("reaction_add", timeout=28800, check=check)
+        db_write(True)
         await pingMsg.edit(content="Response recieved. Thank you!")
     except asyncio.TimeoutError:
         await pingMsg.edit(content="No response. Adding it to the DB!")
+        db_write(False)
         missedWeek, missedMonth, missedThreeMonths = db_check(False)
 
         if missedWeek:
