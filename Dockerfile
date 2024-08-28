@@ -14,6 +14,6 @@ RUN git fetch
 RUN git reset --hard origin/prod
 RUN git pull
 
-RUN pip --break-system-packages --no-cache-dir --upgrade -r requirements.txt
+RUN pip3 install --break-system-packages --no-cache-dir --upgrade -r requirements.txt
 
 CMD ["python", "athena.py"]

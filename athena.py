@@ -427,7 +427,7 @@ async def update(ctx):
         # os.system("git stash apply")
         # os.system("git stash drop")
         os.system(
-            "pip install --break-system-packages --no-cache-dir --upgrade -r requirements.txt"
+            "pip3 install --break-system-packages --no-cache-dir --upgrade -r requirements.txt"
         )
         await ctx.send("Updated!")
         os.execl(currentProccess, currentProccess, *sys.argv)
