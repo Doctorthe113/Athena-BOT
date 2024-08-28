@@ -14,8 +14,6 @@ RUN git fetch
 RUN git reset --hard origin/prod
 RUN git pull
 
-RUN python3 -m venv .venv
-RUN . .venv/bin/activate
-RUN .venv/bin/pip install --no-cache-dir --upgrade -r requirements.txt
+RUN pip --break-system-packages --no-cache-dir --upgrade -r requirements.txt
 
-CMD [".venv/bin/python", "athena.py"]
+CMD ["python", "athena.py"]

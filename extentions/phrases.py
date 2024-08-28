@@ -280,17 +280,11 @@ __**Command List**__:
 Valid subreddits are: `cute`, `naturegifs`, `wholesomememes`, `animalsbeingbros`, `aww`
 
 __**Music**__:
-1. `join` - Join a voice channel
-2. `add {x}` - Add a song to the queue
-3. `play` - Play or starts the music playback
-4. `pause` - Pauses the music
-5. `resume` - Resumes the music
-6. `stop` - Stops the music
-7. `queue` - Shows the queue
-8. `skip` - Skips the current song
-9. `loop` - Loops the current queue
-10. `shuffle` - Shuffles the current queue
-11. `remove {x}` - Removes a song from the queue. `x` is the index of the song you'd get from `queue`.
+1. `/music_player` - To start the music player and make Athena join vc
+2. `/music_search` - To search for music on youtube music
+3. `/music_add` - To add song(s) using links only. Useful for playlists(public ones)
+4. `/music_queue_show` - To show queue when it has been trancuated
+5. `/music_stop` - To stop the music player
 
 If you face any bugs, use `/feedback` to report it please. 😊
 """

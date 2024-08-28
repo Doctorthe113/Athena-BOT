@@ -1,5 +1,6 @@
 .env
 test.ipynb
 test.py
+test.json
 __pycache__/
 .dockerignore

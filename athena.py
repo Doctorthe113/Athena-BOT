@@ -21,35 +21,27 @@ import psutil
 import requests
 import yt_dlp
 import datetime
+import googletrans
 
-from nextcord import Interaction
+from nextcord import Interaction, Embed
 from nextcord.ext import tasks, commands
 from googletrans import Translator, LANGUAGES
-from ytmusicapi import YTMusic
 
 # custom/local modules
 from extentions import (
     Phrase,
     WebSearch,
     Nasa,
-    queue_check,
-    queue_del,
-    queue_grab,
-    queue_loop,
-    queue_make,
-    queue_add,
-    queue_remove,
-    queue_shuffle,
+    Music_Player,
+    Player_Buttons,
+    Dropdown_View,
 )
 
-# from dotenv import load_dotenv
-
-# load_dotenv()
 
 # * loading global variables
-vcs = {}  # {guild_id: voice_client_object}
-logChannel = None
-statuses = cycle(
+musicVcs: dict = {}  # {guild_id: voice_client_object}
+logChannel: nextcord.TextChannel = None
+statuses: OrderedDict = cycle(
     [
         "hello bbg 😏",
         "in your walls 👀",
@@ -58,68 +50,64 @@ statuses = cycle(
     ]
 )
 
-TOKEN = os.getenv(key="TOKEN")
-GOOGLE_API = os.getenv(key="googleAPI")
-CSE_ID = os.getenv(key="searchEngineId")
-NASA_API = os.getenv(key="nasaAPI")
-NINJA_API = os.getenv(key="ninjaAPI")
-REDDIT_CLIENT = os.getenv(key="redditClient")
-REDDIT_SECRET = os.getenv(key="redditSecret")
-EMOJI_REGEX = re.compile(pattern=(r"<:(\w+):(\d+)>"))
-URL_REGEX = re.compile(
+TOKEN: str = os.getenv(key="TOKEN")
+GOOGLE_API: str = os.getenv(key="googleAPI")
+CSE_ID: str = os.getenv(key="searchEngineId")
+NASA_API: str = os.getenv(key="nasaAPI")
+NINJA_API: str = os.getenv(key="ninjaAPI")
+REDDIT_CLIENT: str = os.getenv(key="redditClient")
+REDDIT_SECRET: str = os.getenv(key="redditSecret")
+EMOJI_REGEX: re = re.compile(pattern=(r"<:(\w+):(\d+)>"))
+URL_REGEX: re = re.compile(
     pattern=r"((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z]){2,6}([a-zA-Z0-9\.\&\/\?\:@\-_=#])*"
 )
-PUNC_REGEX = re.compile(r"(?<!\A)[^\w\s]")
-FFMPEG_OPTIONS = {
-    "options": "-vn",
-    "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 60",
-}
+PUNC_REGEX: re = re.compile(r"(?<!\A)[^\w\s]")
 
 
-# * loading differebnt classes and etcs
-translator = Translator()
-phraseObj = Phrase()
-webSearchObj = WebSearch(apiKey=GOOGLE_API, cseId=CSE_ID)
-nasaObj = Nasa(apiKey=NASA_API)
-ytdlMusic = yt_dlp.YoutubeDL({"format": "bestaudio"})
+# * loading different classes and etcs
+translator: Translator = Translator()
+phraseObj: Phrase = Phrase()
+webSearchObj: WebSearch = WebSearch(apiKey=GOOGLE_API, cseId=CSE_ID)
+nasaObj: Nasa = Nasa(apiKey=NASA_API)
+musicPlaybackObj: Music_Player = Music_Player()
 
-intents = nextcord.Intents.default()
+intents: nextcord.Intents = nextcord.Intents.default()
 intents.message_content = True
-bot = commands.Bot(command_prefix=phraseObj.PREFIX, intents=intents)
+bot: nextcord.Client = commands.Bot(command_prefix=phraseObj.PREFIX, intents=intents)
 bot.remove_command("help")
 
 
 @bot.event
 async def on_ready():
-    loginTime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    loginTime: str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     global logChannel
     logChannel = await bot.fetch_channel(1115589968929239153)
 
     print(f"{loginTime}: Logged in as {bot.user}")
-    thread = threading.active_count()
+    thread: int = threading.active_count()
     print(f"Current active thread count: {thread}")
 
 
 @bot.event
-async def on_message(rawMsg):
-    with open("./db/guild.json", "r") as foo:
-        guilds = json.load(foo)
-    translateGuilds = guilds["translate"]
-    dadJokeGuilds = guilds["dadPrompts"]
-    uwuGuilds = guilds["uwuPrompts"]
-    logGuilds = guilds["logs"]
+async def on_message(rawMsg: nextcord.Message):
+    with open("./db/guild.json", "r") as magic:
+        guilds = json.load(magic)
+    translateGuilds: list = guilds["translate"]
+    dadJokeGuilds: list = guilds["dadPrompts"]
+    uwuGuilds: list = guilds["uwuPrompts"]
+    logGuilds: list = guilds["logs"]
 
-    currentTime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    msgChannelId = rawMsg.channel.id
-    randomChance = random.randint(1, 10)
+    currentTime: str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    msgChannelId: int = rawMsg.channel.id
+    randomChance: int = random.randint(1, 10)
 
     # filtering messages for future
-    filteredMsg = re.sub(EMOJI_REGEX, "", rawMsg.content)
-    filteredMsg = re.sub(URL_REGEX, "", filteredMsg)
-    filteredMsgPunc = re.sub(PUNC_REGEX, "", filteredMsg)
-    filteredMsgLow = filteredMsgPunc.lower()
-    filteredMsgLowSet = set(filteredMsgLow.split())
+    filteredMsg: str = re.sub(EMOJI_REGEX, "", rawMsg.content)
+    filteredMsg: str = re.sub(URL_REGEX, "", filteredMsg)
+    filteredMsgPunc: str = re.sub(PUNC_REGEX, "", filteredMsg)
+    filteredMsgLow: str = filteredMsgPunc.lower()
+    filteredMsgLowSet: set = set(filteredMsgLow.split())
 
     # skips if message author is bot itself
     if rawMsg.author == bot.user:
@@ -137,7 +125,7 @@ async def on_message(rawMsg):
 
     # *For non-prompt/automated responses
     # translating messages
-    translate = False
+    translate: bool = False
     if msgChannelId in translateGuilds:
         if (
             translator.detect(filteredMsg).lang != "en"
@@ -147,14 +135,14 @@ async def on_message(rawMsg):
             translate = True
 
     if translate:
-        translation = translator.translate(filteredMsg)
-        translationSrc = LANGUAGES.get(translation.src)
-        replyMsg = await rawMsg.reply(
+        translation: googletrans.models.Translated = translator.translate(filteredMsg)
+        translationSrc: str = LANGUAGES.get(translation.src)
+        replyMsg: nextcord.Message = await rawMsg.reply(
             f"*__From {translationSrc}__*\n>>> {translation.text}", mention_author=False
         )
         await replyMsg.add_reaction("❌")
         if randomChance == 2:
-            instructMsg = await replyMsg.reply(
+            instructMsg: nextcord.Message = await replyMsg.reply(
                 "(*React with ❌ to delete wrong translations*)", mention_author=False
             )
 
@@ -184,18 +172,18 @@ async def on_message(rawMsg):
 
     # saying hi/hello
     if filteredMsgLow == phraseObj.GREETINGPROMPT:
-        greet = phraseObj.greeting_method()
+        greet: str = phraseObj.greeting_method()
         await rawMsg.channel.send(greet)
 
     # magic 8 ball
     if filteredMsgLow.startswith(phraseObj.MAGIC8BALLPROMPT):
-        foo = phraseObj.magic8ball_method()
-        await rawMsg.reply(foo)
+        magic: str = phraseObj.magic8ball_method()
+        await rawMsg.reply(magic)
         return None
 
     # rolling a dice
     if filteredMsgLow == "roll a dice":
-        dice = phraseObj.roll_dice_method()
+        dice: int = phraseObj.roll_dice_method()
         await rawMsg.reply(f"🎲 {dice} 🎲")
         return None
 
@@ -208,15 +196,15 @@ async def on_message(rawMsg):
     if msgChannelId not in dadJokeGuilds:
         for i in phraseObj.DADPROMPT:
             if randomChance == 2 and filteredMsgLow.startswith(i):
-                foo = filteredMsgLow.partition(i)[-1]
-                await rawMsg.reply(f"Hi,{foo}, I am Athena!", mention_author=False)
+                jokePart: str = filteredMsgLow.partition(i)[-1]
+                await rawMsg.reply(f"Hi,{jokePart}, I am Athena!", mention_author=False)
 
     # uwu roasts
     if msgChannelId not in uwuGuilds:
         for i in phraseObj.UWUPROMPT:
             if randomChance == 2 and i in filteredMsgLow:
-                foo = phraseObj.uwu_roast_method()
-                await rawMsg.reply(foo)
+                roast: str = phraseObj.uwu_roast_method()
+                await rawMsg.reply(roast)
 
     # for mentions
     if filteredMsgLow == "athena":
@@ -230,159 +218,6 @@ async def on_message(rawMsg):
 @bot.command()
 async def ping(ctx):
     await ctx.send(f"Pong! Bot Latency `{round(bot.latency * 1000)}ms`")
-
-
-# for starting music playback. eg: "join"
-@bot.command()
-async def join(ctx):
-    try:
-        vc = await ctx.author.voice.channel.connect()
-        vcs[vc.guild.id] = vc
-        dj = ctx.author.name
-        queue_make(vc)
-        await ctx.send(f"Joined {dj}'s voice channel!")
-    except AttributeError:
-        await ctx.send("You haven't joined a voice channel yet, silly! 😒")
-
-
-# for stopping music playback. eg: "stop"
-@bot.command()
-async def stop(ctx):
-    vc = vcs[ctx.guild.id]
-    try:
-        await vc.disconnect()
-        await ctx.send("Stopped the music playback, cya later! 😊")
-        del vcs[ctx.guild.id]
-        queue_del(vc)
-    except:
-        await ctx.send("I am unable to properly stop the music 😔")
-
-
-# for adding music to the queue. eg: "add https://www.youtube.com/watch?v=x"
-@bot.command()
-async def add(ctx, *, arg):
-    vc = vcs[ctx.guild.id]
-    try:
-        data = ytdlMusic.extract_info(arg, download=False)
-    except:
-        musicID = YTMusic().search(arg, "songs")[0]["videoId"]
-        data = ytdlMusic.extract_info(musicID, download=False)
-    songURL = data["url"]
-    title = data["title"]
-    queue_add(vc, songURL, title)
-    await ctx.send(f"Added __{title}__ to the queue.")
-
-
-# for starting/playing music. eg: "play"
-@bot.command()
-async def play(ctx):
-    try:
-        vc = vcs[ctx.guild.id]
-    except:
-        await ctx.send("I am not connected to a voice channel 😔")
-        return None
-    if not vc.is_playing():
-        queue = queue_grab(vc)
-        songURL = queue[0][0]
-        track = nextcord.FFmpegPCMAudio(songURL, **FFMPEG_OPTIONS)
-        vc.play(track, after=lambda e: queue_check(vc))
-        await ctx.send(f"Started playing...")
-    else:
-        await ctx.send("I am already playing! Use `athena add` to add music.")
-
-
-# for pausing music. eg: "pause"
-@bot.command()
-async def pause(ctx):
-    try:
-        vc = vcs[ctx.guild.id]
-        vc.pause()
-        await ctx.send("Paused!")
-    except:
-        await ctx.send("I am not playing anything right now 😔")
-
-
-# for resuming music. eg: "resume"
-@bot.command()
-async def resume(ctx):
-    try:
-        vc = vcs[ctx.guild.id]
-        vc.resume()
-        await ctx.send("Resumed!")
-    except:
-        await ctx.send("I have not anything paused right now 😀")
-
-
-# for looping music. eg: "loop"
-@bot.command()
-async def loop(ctx):
-    try:
-        vc = vcs[ctx.guild.id]
-        loop = queue_loop(vc)
-        if loop:
-            await ctx.send("Looping the current queue!")
-        else:
-            await ctx.send("Turned loop off!")
-    except:
-        await ctx.send("I am unable to loop 😔")
-
-
-# for skipping music. eg: "skip"
-@bot.command()
-async def skip(ctx):
-    try:
-        vc = vcs[ctx.guild.id]
-    except:
-        await ctx.send("I am not connected to a voice channel 😔")
-    if not vc.is_playing() or not vc:
-        await ctx.send("I am not playing anything right now 😔")
-    else:
-        vc.pause()
-        await queue_check(vc)
-        await ctx.send("Skipping!")
-
-
-# for checking queue. eg: "queue"
-@bot.command()
-async def queue(ctx):
-    try:
-        vc = vcs[ctx.guild.id]
-        queue = queue_grab(vc)
-        queue = queue[1]
-        queueList = ""
-        for i, j in enumerate(queue):
-            queueList = queueList + f"{i}. {j}\n"
-        await ctx.send(f"Here's the queue:```md\n{queueList}```")
-    except:
-        await ctx.send("Queue is empty.")
-
-
-# for shuffling queue. eg: "shuffle"
-@bot.command()
-async def shuffle(ctx):
-    try:
-        vc = vcs[ctx.guild.id]
-        queue_shuffle(vc)
-        queue = queue_grab(vc)
-        queue = queue[1]
-        queueList = ""
-        for i, j in enumerate(queue):
-            queueList = queueList + f"{i}. {j}\n"
-        await ctx.send(f"Queue shuffled! Here's new queue:```md\n{queueList}```")
-    except:
-        await ctx.send("I am unable to shuffle 😔")
-
-
-# for removing a song from the queue. eg: "remove 1"
-@bot.command()
-async def remove(ctx, index):
-    try:
-        vc = vcs[ctx.guild.id]
-        index = int(index)
-        removedSong = queue_remove(vc, index)
-        await ctx.send(f"Removed __{removedSong}__ from the queue.")
-    except:
-        await ctx.send(f"I am unable to remove {index}th song 😔")
 
 
 # for help. eg: "help"
@@ -591,6 +426,9 @@ async def update(ctx):
         os.system("git pull -f")
         # os.system("git stash apply")
         # os.system("git stash drop")
+        os.system(
+            "pip install --break-system-packages --no-cache-dir --upgrade -r requirements.txt"
+        )
         await ctx.send("Updated!")
         os.execl(currentProccess, currentProccess, *sys.argv)
     except:
@@ -705,6 +543,81 @@ async def log(interaction: Interaction):
     )
 
 
+# music player starter
+@bot.slash_command(name="music_player", description="Intiates the music player")
+async def music_player(interaction: Interaction):
+    try:
+        musicVc: nextcord.VoiceClient = await interaction.user.voice.channel.connect()
+        embed: nextcord.Embed = await musicPlaybackObj.embed_maker(
+            "Music player",
+            ("Songs in queue", ""),
+            ("Currently playing <:player:1214062123953422386>", ""),
+            ("", ""),
+        )
+        embedMsg: nextcord.Message = await interaction.response.send_message(
+            embed=embed, view=Player_Buttons(musicPlaybackObj, musicVc)
+        )
+
+        musicVcs[interaction.guild.id] = [musicVc]
+        musicPlaybackObj.queue_make(interaction.guild, musicVc, embedMsg)
+    except:
+        await interaction.response.send_message(
+            "An error occurred, please try again!", ephemeral=True
+        )
+
+
+# music search
+@bot.slash_command(name="music_search", description="Searches for a song")
+async def music_search(interaction: Interaction, query: str):
+    data: tuple = musicPlaybackObj.music_search(query)
+    titles: str = "\n".join(f"{i}. {s}" for i, s in enumerate(data[0]))
+    embed: Embed = await musicPlaybackObj.embed_maker(
+        "Song finder", ("Titles", titles), ("", ""), ("", "")
+    )
+    await interaction.response.send_message(
+        embed=embed,
+        view=Dropdown_View(data[1], musicPlaybackObj),
+        ephemeral=True,
+    )
+
+
+# music adder using url
+@bot.slash_command(name="music_add", description="Adds song(s) using links only")
+async def music_add(interaction: Interaction, url: str):
+    try:
+        await interaction.response.send_message("Song(s) added!", ephemeral=True)
+        await musicPlaybackObj.queue_add_handler(interaction.guild, url)
+    except:
+        await interaction.response.send_message(
+            "Please use a valid url!", ephemeral=True
+        )
+
+
+# to check queue if it exceeds embed limit
+@bot.slash_command(name="music_queue_show", description="Shows the queue")
+async def music_queue_show(interaction: Interaction):
+    titles: list = musicPlaybackObj.queue_grab(interaction.guild)[1]
+    queueList: str = "\n".join(f"{i}. {s}" for i, s in enumerate(titles))
+    try:
+        await interaction.response.send_message(queueList, ephemeral=True)
+    except nextcord.errors.HTTPException:
+        await interaction.response.send_message(
+            "Queue is too big for discord a message!", ephemeral=True
+        )
+
+
+# music player stopper
+@bot.slash_command(name="music_stop", description="Stops the music player")
+async def music_stop(interaction: Interaction):
+    try:
+        musicVc = musicVcs[interaction.guild.id][0]
+        await musicPlaybackObj.queue_del(interaction.guild)
+        await musicVc.disconnect()
+        await interaction.response.send_message("Music player stopped!")
+    except:
+        await interaction.response.send_message("I am not playing music!")
+
+
 # * Other functions that needs to run periodically
 # check my electric meter balance
 @tasks.loop(hours=12)
@@ -732,7 +645,7 @@ async def before_change_status():
     await bot.wait_until_ready()
 
 
-@tasks.loop(hours=24)
+@tasks.loop(hours=12)
 async def ping_doc():
     todayDate = datetime.datetime.now().strftime("%Y-%m-%d")
     pingChannel = await bot.fetch_channel(1273569772407226400)
@@ -862,6 +775,152 @@ async def before_ping_doc():
 if __name__ == "__main__":
     desco_balance_checker.start()
     change_status.start()
-    ping_doc.start()
+    # ping_doc.start()
     # birthday_reminder.start()
     bot.run(TOKEN)
+
+
+# # for starting music playback. eg: "join"
+# @bot.command()
+# async def join(ctx):
+#     try:
+#         vc = await ctx.author.voice.channel.connect()
+#         vcs[vc.guild.id] = vc
+#         dj = ctx.author.name
+#         queue_make(vc)
+#         await ctx.send(f"Joined {dj}'s voice channel!")
+#     except AttributeError:
+#         await ctx.send("You haven't joined a voice channel yet, silly! 😒")
+
+
+# # for stopping music playback. eg: "stop"
+# @bot.command()
+# async def stop(ctx):
+#     vc = vcs[ctx.guild.id]
+#     try:
+#         await vc.disconnect()
+#         await ctx.send("Stopped the music playback, cya later! 😊")
+#         del vcs[ctx.guild.id]
+#         queue_del(vc)
+#     except:
+#         await ctx.send("I am unable to properly stop the music 😔")
+
+
+# # for adding music to the queue. eg: "add https://www.youtube.com/watch?v=x"
+# @bot.command()
+# async def add(ctx, *, arg):
+#     vc = vcs[ctx.guild.id]
+#     title = music_playbackObj.music_search(arg, vc)
+#     await ctx.send(f"Added __{title}__ to the queue.")
+
+
+# # for starting/playing music. eg: "play"
+# @bot.command()
+# async def play(ctx):
+#     try:
+#         vc = vcs[ctx.guild.id]
+#     except:
+#         await ctx.send("I am not connected to a voice channel 😔")
+#         return None
+#     if not vc.is_playing():
+#         queue = queue_grab(vc)
+#         songURL = queue[0][0]
+#         track = nextcord.FFmpegPCMAudio(songURL, **FFMPEG_OPTIONS)
+#         vc.play(track, after=lambda e: queue_check(vc))
+#         await ctx.send(f"Started playing...")
+#     else:
+#         await ctx.send("I am already playing! Use `athena add` to add music.")
+
+
+# # for pausing music. eg: "pause"
+# @bot.command()
+# async def pause(ctx):
+#     try:
+#         vc = vcs[ctx.guild.id]
+#         vc.pause()
+#         await ctx.send("Paused!")
+#     except:
+#         await ctx.send("I am not playing anything right now 😔")
+
+
+# # for resuming music. eg: "resume"
+# @bot.command()
+# async def resume(ctx):
+#     try:
+#         vc = vcs[ctx.guild.id]
+#         vc.resume()
+#         await ctx.send("Resumed!")
+#     except:
+#         await ctx.send("I have not anything paused right now 😀")
+
+
+# # for looping music. eg: "loop"
+# @bot.command()
+# async def loop(ctx):
+#     try:
+#         vc = vcs[ctx.guild.id]
+#         loop = queue_loop(vc)
+#         if loop:
+#             await ctx.send("Looping the current queue!")
+#         else:
+#             await ctx.send("Turned loop off!")
+#     except:
+#         await ctx.send("I am unable to loop 😔")
+
+
+# # for skipping music. eg: "skip"
+# @bot.command()
+# async def skip(ctx):
+#     try:
+#         vc = vcs[ctx.guild.id]
+#     except:
+#         await ctx.send("I am not connected to a voice channel 😔")
+#     if not vc.is_playing() or not vc:
+#         await ctx.send("I am not playing anything right now 😔")
+#     else:
+#         vc.pause()
+#         await queue_check(vc)
+#         await ctx.send("Skipping!")
+
+
+# # for checking queue. eg: "queue"
+# @bot.command()
+# async def queue(ctx):
+#     try:
+#         vc = vcs[ctx.guild.id]
+#         queue = queue_grab(vc)
+#         queue = queue[1]
+#         queueList = ""
+#         for i, j in enumerate(queue):
+#             queueList = queueList + f"{i}. {j}\n"
+#         await ctx.send(f"Here's the queue:```md\n{queueList}```")
+#     except:
+#         await ctx.send("Queue is empty.")
+
+
+# # for shuffling queue. eg: "shuffle"
+# @bot.command()
+# async def shuffle(ctx):
+#     try:
+#         vc = vcs[ctx.guild.id]
+#         queue_shuffle(vc)
+#         queue = queue_grab(vc)
+#         queue = queue[1]
+#         queueList = ""
+#         for i, j in enumerate(queue):
+#             queueList = queueList + f"{i}. {j}\n"
+#         await ctx.send(f"Queue shuffled! Here's new queue:```md\n{queueList}```")
+#     except:
+#         await ctx.send("I am unable to shuffle 😔")
+
+
+# # for removing a song from the queue. eg: "remove 1"
+# @bot.command()
+# async def remove(ctx, index):
+#     try:
+#         vc = vcs[ctx.guild.id]
+#         index = int(index)
+#         removedSong = queue_remove(vc, index)
+#         await ctx.send(f"Removed __{removedSong}__ from the queue.")
+#     except:
+#         await ctx.send(f"I am unable to remove {index}th song 😔")
