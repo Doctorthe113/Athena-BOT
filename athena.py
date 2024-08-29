@@ -619,16 +619,99 @@ async def music_stop(interaction: Interaction):
 # * Other functions that needs to run periodically
 # check my electric meter balance
 @tasks.loop(hours=12)
-async def desco_balance_checker():
+async def desco_balance_and_doc_ping():
+    # for desco balance
     descoChannel = await bot.fetch_channel(1273571248554905621)
     for i in ((661120206515, 12021574), (661120206516, 12021575)):
         balance = webSearchObj.desco_bill(i[0], i[1])
         if int(balance) <= 250:
             await descoChannel.send(f"Balance {balance} left in {i[1]}")
 
+    # for doc ping
+    todayDate = datetime.datetime.now().strftime("%Y-%m-%d")
+    pingChannel = await bot.fetch_channel(1273569772407226400)
 
-@desco_balance_checker.before_loop
-async def before_desco_balance_checker():
+    # check if today's entry in db or not.
+    def db_check(init):
+        with open("./db/ping-res.json", "r") as foo:
+            pingDb = json.load(foo)
+        # `init = true` to check for today's entry. `false` to check for previous days
+        if init:
+            if todayDate in pingDb:
+                return True
+            else:
+                return False
+
+        # checks for previous days entry
+        global missedWeek, missedMonth, missedThreeMonths
+        missedDay = 0
+        missedWeek = False
+        missedMonth = False
+        missedThreeMonths = False
+
+        newPingDb = OrderedDict(pingDb)
+        for key, value in reversed(newPingDb.items()):
+            if not value:
+                missedDay += 1
+            else:
+                missedDay = 0
+                break
+
+            if missedDay == 7:
+                missedWeek = True
+            if missedDay == 30:
+                missedMonth = True
+            if missedDay == 90:
+                missedThreeMonths = True
+
+        return missedWeek, missedMonth, missedThreeMonths
+
+    # write today's entry in db
+    def db_write(ping):
+        with open("./db/ping-res.json", "r") as foo:
+            pingDb = json.load(foo)
+
+        with open("./db/ping-res.json", "w") as foo:
+            pingDb.update({todayDate: ping})
+            json.dump(pingDb, foo, indent=4)
+
+    # check if user responded or not
+    def check(reaction, user):
+        return user != bot.user and str(reaction.emoji) == "✅"
+
+    # first checks if there's an entry for today or not
+    if db_check(True):
+        return None
+    pingMsg = await pingChannel.send(
+        f"Pinging <@699342617095438479>! Please react if you are okay."
+    )
+    await pingMsg.add_reaction("✅")
+
+    try:
+        reaction, user = await bot.wait_for("reaction_add", timeout=28800, check=check)
+        db_write(True)
+        await pingMsg.edit(content="Response recieved. Thank you!")
+    except asyncio.TimeoutError:
+        await pingMsg.edit(content="No response. Adding it to the DB!")
+        db_write(False)
+        missedWeek, missedMonth, missedThreeMonths = db_check(False)
+
+        if missedWeek:
+            await pingChannel.send(
+                "Missed ping in the last week! Assuming you were busy!"
+            )
+        if missedMonth:
+            await pingChannel.send(
+                "Missed ping in the last month! Assuming you are in trouble!"
+            )
+        if missedThreeMonths:
+            await pingChannel.send(
+                "Missed ping in the last 3 months! Assuming you are dead!"
+            )
+
+
+@desco_balance_and_doc_ping.before_loop
+async def before_desco_balance_and_doc_ping():
     await bot.wait_until_ready()
 
 
@@ -772,8 +855,8 @@ async def before_ping_doc():
 
 if __name__ == "__main__":
     change_status.start()
-    ping_doc.start()
-    desco_balance_checker.start()
+    # ping_doc.start()
+    desco_balance_and_doc_ping.start()
     # birthday_reminder.start()
     bot.run(TOKEN)
 
