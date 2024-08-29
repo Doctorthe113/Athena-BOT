@@ -643,7 +643,7 @@ async def before_change_status():
     await bot.wait_until_ready()
 
 
-@tasks.loop(hours=12)
+@tasks.loop(hours=6)
 async def ping_doc():
     todayDate = datetime.datetime.now().strftime("%Y-%m-%d")
     pingChannel = await bot.fetch_channel(1273569772407226400)
@@ -771,9 +771,9 @@ async def before_ping_doc():
 
 
 if __name__ == "__main__":
-    desco_balance_checker.start()
     change_status.start()
-    # ping_doc.start()
+    ping_doc.start()
+    desco_balance_checker.start()
     # birthday_reminder.start()
     bot.run(TOKEN)
 
