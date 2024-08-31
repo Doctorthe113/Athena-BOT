@@ -19,7 +19,7 @@ class Music_Player:
         self.voiceCallObjects: dict = {} # {guild_id: VoiceClient}
         self.queues: dict = {} # {guild_id: [url_list, title_ list, current_index, loop, currentSong]}
         self.FFMPEG_OPTIONS: dict = {
-            "options": "-vn",
+            "options": "-vn -b:a 96k -acodec libopus -ar 48000",
             "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 60",
         }
         self.ytdlObj: yt_dlp.YoutubeDL = yt_dlp.YoutubeDL(
@@ -89,7 +89,7 @@ class Music_Player:
             for i in data["entries"]:
                 await self.queue_add(guild, i["url"])
         else:
-            await self.queue_add(guild, data["url"])
+            await self.queue_add(guild, query)
 
     # this queue is not exposed to the user. It is used internally
     async def queue_add(self, guild: nextcord.Guild, songURL: str) -> None:
@@ -175,8 +175,11 @@ class Music_Player:
             nextSongName: str = self.queue_grab(guild)[1][currentSongIndex]
             self.queues[guild.id][4] = nextSongName
             await self.queue_list_updater(guild)
+            source = await nextcord.FFmpegOpusAudio.from_probe(
+                nextSongUrl, **self.FFMPEG_OPTIONS
+            )
             voiceCallObj.play(
-                nextcord.FFmpegPCMAudio(nextSongUrl, **self.FFMPEG_OPTIONS),
+                source,
                 after=lambda e: self.queue_next(voiceCallObj),
             )
         except IndexError:
@@ -185,14 +188,13 @@ class Music_Player:
                 self.queues[guild.id][2] = -1  # setting to -1 so when this function is
                 await self.queue_next(voiceCallObj)  # called again it will start from 0
             else:
-                await voiceCallObj.disconnect()
                 await self.queue_del(guild)
+                await voiceCallObj.disconnect()
                 return None
         except nextcord.errors.ClientException:
             return None
 
-    # for start playing. They are dependent on above functions so they are below them
-    # this also works for pause and resuming
+    # for start playing. This also works for pause and resuming
     async def play(self, guild: nextcord.Guild) -> None:
         voiceCallObj: nextcord.VoiceClient = self.voiceCallObjects[guild.id]
         if voiceCallObj.is_playing():
@@ -206,8 +208,11 @@ class Music_Player:
         firstSongName: str = self.queue_grab(guild)[1][0]
         self.queues[guild.id][4] = firstSongName
         await self.queue_list_updater(guild)
+        source = await nextcord.FFmpegOpusAudio.from_probe(
+            firstSongUrl, **self.FFMPEG_OPTIONS
+        )
         voiceCallObj.play(
-            nextcord.FFmpegPCMAudio(firstSongUrl, **self.FFMPEG_OPTIONS),
+            source,
             after=lambda e: self.queue_next(voiceCallObj),
         )
         return None
@@ -305,3 +310,4 @@ class Dropdown_View(View):
     def __init__(self, urls: list, musicPlayerObj: Music_Player):
         super().__init__()
         self.add_item(Dropdown_Button(urls, musicPlayerObj))
+        self.timeout = 3600
