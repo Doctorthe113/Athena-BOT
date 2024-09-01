@@ -19,7 +19,7 @@ class Music_Player:
         self.voiceCallObjects: dict = {} # {guild_id: VoiceClient}
         self.queues: dict = {} # {guild_id: [url_list, title_ list, current_index, loop, currentSong]}
         self.FFMPEG_OPTIONS: dict = {
-            "options": "-vn -b:a 96k -acodec libopus -ar 48000",
+            "options": "-vn -ac 2 -acodec libopus -b:a 128k -ar 48000",
             "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 60",
         }
         self.ytdlObj: yt_dlp.YoutubeDL = yt_dlp.YoutubeDL(

@@ -9,26 +9,27 @@ urllib3.disable_warnings()
 
 
 #! all the queries are case sensitive
-class WebSearch:
+class Web_Search:
     def __init__(self, apiKey, cseId) -> None:
         self.APIKEY = apiKey
         self.CSEID = cseId
         self.dictionaryApi = "https://api.dictionaryapi.dev/api/v2/entries/en/"
         self.descoApi = "https://prepaid.desco.org.bd/api/tkdes/customer/getBalance?"
 
-    def desco_bill(self, meter, account):
+    def desco_bill(self, meter, account) -> str:
         response = requests.get(
             self.descoApi, params={"accountNo": account, "meterNo": meter}, verify=False
         ).json()
         balance = response["data"]["balance"]
         return balance
 
-    def google_search(self, query):
+    def google_search(self, query) -> str:
         service = build(
             "customsearch", "v1", developerKey=self.APIKEY, static_discovery=False
         ).cse()
-        result = service.list(q=query, cx=self.CSEID, safe="high").execute()
+        result = service.list(q=query, cx=self.CSEID, safe="active").execute()
         searchResult = ""
+
         try:
             for i in range(0, 6):
                 searchResult += (
@@ -44,7 +45,7 @@ class WebSearch:
             searchResult = "No results found"
         return searchResult
 
-    def wikiSearch(self, query):
+    def wikiSearch(self, query) -> tuple:
         relatedArticles = wikipedia.search(query)
         try:
             wikiSummary = wikipedia.summary(
@@ -57,7 +58,7 @@ class WebSearch:
             wikiSummary = e
         return wikiSummary, relatedArticles
 
-    def dictionary(self, query):
+    def dictionary(self, query) -> tuple:
         vocub = requests.get(self.dictionaryApi + query).json()
         word = vocub[0]["word"]
         pronounciation = vocub[0]["phonetics"][0].get("audio", "unknown")
@@ -76,7 +77,7 @@ class WebSearch:
             )
         return word, phonetics, pronounciation, origin, definition
 
-    def reddit(self, clientID, clientSecret, subreddit):
+    def reddit(self, clientID, clientSecret, subreddit) -> str:
         r = praw.Reddit(
             client_id=clientID,
             client_secret=clientSecret,

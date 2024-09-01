@@ -30,7 +30,7 @@ from googletrans import Translator, LANGUAGES
 # custom/local modules
 from extentions import (
     Phrase,
-    WebSearch,
+    Web_Search,
     Nasa,
     Music_Player,
     Player_Buttons,
@@ -52,7 +52,7 @@ statuses: OrderedDict = cycle(
 
 TOKEN: str = os.getenv(key="TOKEN")
 GOOGLE_API: str = os.getenv(key="googleAPI")
-CSE_ID: str = os.getenv(key="searchEngineId")
+CSE_ID: str = os.getenv(key="searchEngineID")
 NASA_API: str = os.getenv(key="nasaAPI")
 NINJA_API: str = os.getenv(key="ninjaAPI")
 REDDIT_CLIENT: str = os.getenv(key="redditClient")
@@ -67,7 +67,7 @@ PUNC_REGEX: re = re.compile(r"(?<!\A)[^\w\s]")
 # * loading different classes and etcs
 translator: Translator = Translator()
 phraseObj: Phrase = Phrase()
-webSearchObj: WebSearch = WebSearch(apiKey=GOOGLE_API, cseId=CSE_ID)
+webSearchObj: Web_Search = Web_Search(apiKey=GOOGLE_API, cseId=CSE_ID)
 nasaObj: Nasa = Nasa(apiKey=NASA_API)
 musicPlaybackObj: Music_Player = Music_Player()
 
