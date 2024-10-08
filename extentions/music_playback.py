@@ -28,8 +28,8 @@ class Music_Player:
                 "quiet": True,
                 "no_warnings": True,
                 "extract_flat": "in_playlist",
-                "netrc": True,
-                "netrc-location": "/root/.netrc"
+                "cookies": "../cookies.txt",
+
             }
         )
         self.ytMusicObj: YTMusic = YTMusic()
