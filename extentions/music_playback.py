@@ -29,6 +29,7 @@ class Music_Player:
                 "no_warnings": True,
                 "extract_flat": "in_playlist",
                 "netrc": True,
+                "netrc-location": "/root/.netrc"
             }
         )
         self.ytMusicObj: YTMusic = YTMusic()

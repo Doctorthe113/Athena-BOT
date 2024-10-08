@@ -1,6 +1,6 @@
 .env
 .env(prod)
-.venv/
+.venv
 test.ipynb
 test.py
 __pycache__/
