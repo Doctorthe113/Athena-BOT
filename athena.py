@@ -47,7 +47,7 @@ statuses: OrderedDict = cycle(
         "in your walls 👀",
         "Doctor chan my beloved 😍",
         "Yo Anna, where you at?",
-        "Currently hosted on the cloud \o/",
+        "Currently hosted on the cloud \\o/",
     ]
 )
 
