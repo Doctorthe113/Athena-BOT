@@ -320,7 +320,6 @@ async def download(ctx, arg):
             "format": "best",
             "outtml": "-",
             "quiet": True,
-            "cookies": "cookies.txt",
         }
     )
     data = ytdlVid.extract_info(arg, download=False)

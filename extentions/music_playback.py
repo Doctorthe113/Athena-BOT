@@ -28,7 +28,6 @@ class Music_Player:
                 "quiet": True,
                 "no_warnings": True,
                 "extract_flat": "in_playlist",
-                "cookies": "../cookies.txt",
 
             }
         )

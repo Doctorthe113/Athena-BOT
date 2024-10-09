@@ -15,7 +15,7 @@ RUN git fetch
 RUN git reset --hard origin/prod
 RUN git pull
 
-RUN touch .netrc && chmod 600 /root/.netrc
+RUN touch cookies.txt && chmod 600 /root/cookies.txt
 
 RUN pip3 install --break-system-packages --no-cache-dir --upgrade -r requirements.txt
 
