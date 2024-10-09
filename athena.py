@@ -317,7 +317,6 @@ async def define(ctx, *, arg):
 async def download(ctx, arg):
     ytdlVid = yt_dlp.YoutubeDL(
         {
-            "format": "best",
             "outtml": "-",
             "quiet": True,
         }
