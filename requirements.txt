@@ -96,5 +96,5 @@ websockets==13.1
 Werkzeug==3.0.1
 wikipedia==1.4.0
 yarl==1.9.4
-yt-dlp==2024.9.27
+yt-dlp==2024.10.7
 ytmusicapi==1.5.3
