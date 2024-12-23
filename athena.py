@@ -430,8 +430,7 @@ async def update(ctx):
         await dbBakChannel.send(file=nextcord.File("./db/ping-res.json"))
         await dbBakChannel.send(file=nextcord.File("./db/guild.json"))
         # os.system("git stash push ./db/*")
-        os.system("git fetch")
-        os.system("git reset --hard origin/prod")
+        os.system("git pull -f")
         # os.system("git stash apply")
         # os.system("git stash drop")
         os.system("pip3 install --break-system-packages --upgrade -r requirements.txt")
@@ -629,7 +628,7 @@ async def music_stop(interaction: Interaction):
 @tasks.loop(hours=12)
 async def desco_balance_checker():
     descoChannel = await bot.fetch_channel(1273571248554905621)
-    for i in ((661120206515, 12021574), (661120206516, 12021575)):
+    for i in ((066110019262, 34222701)):
         balance = webSearchObj.desco_bill(i[0], i[1])
         if int(balance) <= 250:
             await descoChannel.send(f"Balance {balance} left in {i[1]}")
@@ -651,7 +650,8 @@ async def before_change_status():
     await bot.wait_until_ready()
 
 
-@tasks.loop(hours=6)
+# @tasks.loop(hours=6)
+@tasks.loop(seconds=30)
 async def ping_doc():
     todayDate = datetime.datetime.now().strftime("%Y-%m-%d")
     pingChannel = await bot.fetch_channel(1273569772407226400)
@@ -680,15 +680,15 @@ async def ping_doc():
             if not value:
                 missedDay += 1
             else:
-                missedDay = 0
                 break
 
-            if missedDay == 7:
-                missedWeek = True
-            if missedDay == 30:
-                missedMonth = True
-            if missedDay == 90:
-                missedThreeMonths = True
+        print(missedDay)
+        if missedDay == 7:
+            missedWeek = True
+        if missedDay == 30:
+            missedMonth = True
+        if missedDay == 90:
+            missedThreeMonths = True
 
         return missedWeek, missedMonth, missedThreeMonths
 
@@ -701,10 +701,6 @@ async def ping_doc():
             pingDb.update({todayDate: ping})
             json.dump(pingDb, foo, indent=4)
 
-    # check if user responded or not
-    def check(reaction, user):
-        return user != bot.user and str(reaction.emoji) == "✅"
-
     # first checks if there's an entry for today or not
     if db_check(True):
         return None
@@ -713,26 +709,36 @@ async def ping_doc():
     )
     await pingMsg.add_reaction("✅")
 
+    # check if user responded or not
+    def check(reaction, user):
+        return user != bot.user and str(reaction.emoji) == "✅"
+
+    # waits for 8 hrs for a reaction response. If theres no reaction then the `except`
+    # block will be executed
     try:
-        reaction, user = await bot.wait_for("reaction_add", timeout=28800, check=check)
+        # reaction, user = await bot.wait_for("reaction_add", timeout=28800, check=check)
+        reaction, user = await bot.wait_for("reaction_add", timeout=30, check=check)
         db_write(True)
         await pingMsg.edit(content="Response recieved. Thank you!")
     except asyncio.TimeoutError:
         await pingMsg.edit(content="No response. Adding it to the DB!")
         db_write(False)
-        missedWeek, missedMonth, missedThreeMonths = db_check(False)
 
+        # this check if there's no response for 7, 30, 90 days. If theres none then
+        # send the alert messages to "friends" and Anna
+        missedWeek, missedMonth, missedThreeMonths = db_check(False)
+        alertChannel = await bot.fetch_channel(1173282717689970708)
         if missedWeek:
-            await pingChannel.send(
-                "Missed ping in the last week! Assuming you were busy!"
+            await alertChannel.send(
+                "The Doctor didn't respond to any pings in the last week! Assuming he is busy/having a mental breakdown/unable to respond!"
             )
         if missedMonth:
-            await pingChannel.send(
-                "Missed ping in the last month! Assuming you are in trouble!"
+            await alertChannel.send(
+                "The Doctor didn't respond to any pings in the last month. Assuming he's in trouble!"
             )
         if missedThreeMonths:
-            await pingChannel.send(
-                "Missed ping in the last 3 months! Assuming you are dead!"
+            await alertChannel.send(
+                "The Doctor didn't respond to any pings in the last 3 months. Assuming he's dead! Intiating Marlin protocol if it was set-up. I am hosted on a VPS at the moment so eventually I will go offline along with all of Doctor's project. Goodbye!"
             )
 
 
@@ -784,149 +790,3 @@ if __name__ == "__main__":
     desco_balance_checker.start()
     # birthday_reminder.start()
     bot.run(TOKEN)
-
-
-# # for starting music playback. eg: "join"
-# @bot.command()
-# async def join(ctx):
-#     try:
-#         vc = await ctx.author.voice.channel.connect()
-#         vcs[vc.guild.id] = vc
-#         dj = ctx.author.name
-#         queue_make(vc)
-#         await ctx.send(f"Joined {dj}'s voice channel!")
-#     except AttributeError:
-#         await ctx.send("You haven't joined a voice channel yet, silly! 😒")
-
-
-# # for stopping music playback. eg: "stop"
-# @bot.command()
-# async def stop(ctx):
-#     vc = vcs[ctx.guild.id]
-#     try:
-#         await vc.disconnect()
-#         await ctx.send("Stopped the music playback, cya later! 😊")
-#         del vcs[ctx.guild.id]
-#         queue_del(vc)
-#     except:
-#         await ctx.send("I am unable to properly stop the music 😔")
-
-
-# # for adding music to the queue. eg: "add https://www.youtube.com/watch?v=x"
-# @bot.command()
-# async def add(ctx, *, arg):
-#     vc = vcs[ctx.guild.id]
-#     title = music_playbackObj.music_search(arg, vc)
-#     await ctx.send(f"Added __{title}__ to the queue.")
-
-
-# # for starting/playing music. eg: "play"
-# @bot.command()
-# async def play(ctx):
-#     try:
-#         vc = vcs[ctx.guild.id]
-#     except:
-#         await ctx.send("I am not connected to a voice channel 😔")
-#         return None
-#     if not vc.is_playing():
-#         queue = queue_grab(vc)
-#         songURL = queue[0][0]
-#         track = nextcord.FFmpegPCMAudio(songURL, **FFMPEG_OPTIONS)
-#         vc.play(track, after=lambda e: queue_check(vc))
-#         await ctx.send(f"Started playing...")
-#     else:
-#         await ctx.send("I am already playing! Use `athena add` to add music.")
-
-
-# # for pausing music. eg: "pause"
-# @bot.command()
-# async def pause(ctx):
-#     try:
-#         vc = vcs[ctx.guild.id]
-#         vc.pause()
-#         await ctx.send("Paused!")
-#     except:
-#         await ctx.send("I am not playing anything right now 😔")
-
-
-# # for resuming music. eg: "resume"
-# @bot.command()
-# async def resume(ctx):
-#     try:
-#         vc = vcs[ctx.guild.id]
-#         vc.resume()
-#         await ctx.send("Resumed!")
-#     except:
-#         await ctx.send("I have not anything paused right now 😀")
-
-
-# # for looping music. eg: "loop"
-# @bot.command()
-# async def loop(ctx):
-#     try:
-#         vc = vcs[ctx.guild.id]
-#         loop = queue_loop(vc)
-#         if loop:
-#             await ctx.send("Looping the current queue!")
-#         else:
-#             await ctx.send("Turned loop off!")
-#     except:
-#         await ctx.send("I am unable to loop 😔")
-
-
-# # for skipping music. eg: "skip"
-# @bot.command()
-# async def skip(ctx):
-#     try:
-#         vc = vcs[ctx.guild.id]
-#     except:
-#         await ctx.send("I am not connected to a voice channel 😔")
-#     if not vc.is_playing() or not vc:
-#         await ctx.send("I am not playing anything right now 😔")
-#     else:
-#         vc.pause()
-#         await queue_check(vc)
-#         await ctx.send("Skipping!")
-
-
-# # for checking queue. eg: "queue"
-# @bot.command()
-# async def queue(ctx):
-#     try:
-#         vc = vcs[ctx.guild.id]
-#         queue = queue_grab(vc)
-#         queue = queue[1]
-#         queueList = ""
-#         for i, j in enumerate(queue):
-#             queueList = queueList + f"{i}. {j}\n"
-#         await ctx.send(f"Here's the queue:```md\n{queueList}```")
-#     except:
-#         await ctx.send("Queue is empty.")
-
-
-# # for shuffling queue. eg: "shuffle"
-# @bot.command()
-# async def shuffle(ctx):
-#     try:
-#         vc = vcs[ctx.guild.id]
-#         queue_shuffle(vc)
-#         queue = queue_grab(vc)
-#         queue = queue[1]
-#         queueList = ""
-#         for i, j in enumerate(queue):
-#             queueList = queueList + f"{i}. {j}\n"
-#         await ctx.send(f"Queue shuffled! Here's new queue:```md\n{queueList}```")
-#     except:
-#         await ctx.send("I am unable to shuffle 😔")
-
-
-# # for removing a song from the queue. eg: "remove 1"
-# @bot.command()
-# async def remove(ctx, index):
-#     try:
-#         vc = vcs[ctx.guild.id]
-#         index = int(index)
-#         removedSong = queue_remove(vc, index)
-#         await ctx.send(f"Removed __{removedSong}__ from the queue.")
-#     except:
-#         await ctx.send(f"I am unable to remove {index}th song 😔")
