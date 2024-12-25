@@ -628,7 +628,7 @@ async def music_stop(interaction: Interaction):
 @tasks.loop(hours=12)
 async def desco_balance_checker():
     descoChannel = await bot.fetch_channel(1273571248554905621)
-    for i in ((066110019262, 34222701)):
+    for i in ((66110019262, 34222701)):
         balance = webSearchObj.desco_bill(i[0], i[1])
         if int(balance) <= 250:
             await descoChannel.send(f"Balance {balance} left in {i[1]}")
