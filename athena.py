@@ -299,17 +299,18 @@ async def purge(ctx, *, arg):
 # for defining words. eg: "define x"
 @bot.command()
 async def define(ctx, *, arg):
-    try:
-        result = webSearchObj.dictionary(arg)
+    result = webSearchObj.dictionary(arg)
+    if result != "Word not found" or result != "Not available in the free dictionary":
         await ctx.send(
-            f"### {result[0]} \n"
-            + f"### {result[1]} \n"
-            + f"__Pronounciation__: {result[2]} \n"
-            + f"__Origin__: {result[3]} \n"
-            + f"__Definitions__:{result[4]}"
+            f"## {result["word"]} \n"
+            + f"### {result["syllables"]} \n"
+            + f"__Pronounciation__: {result["phonetics"]} \n"
+            + f"__Definitions__: \n- {result["definition"]}"
         )
-    except:
-        await ctx.send("An error has occured.")
+    elif result != "Not available in the free dictionary":
+        await ctx.send("Word not available in the free dictionary")
+    elif result == "Word not found":
+        await ctx.send("Word not found")
 
 
 # for downloading videos. eg: "download https://www.youtube.com/watch?v=x"
@@ -628,10 +629,14 @@ async def music_stop(interaction: Interaction):
 @tasks.loop(hours=12)
 async def desco_balance_checker():
     descoChannel = await bot.fetch_channel(1273571248554905621)
-    for i in ((66110019262, 34222701)):
-        balance = webSearchObj.desco_bill(i[0], i[1])
-        if int(balance) <= 250:
-            await descoChannel.send(f"Balance {balance} left in {i[1]}")
+    # for i in ((661120206515, 12021574), (661120206516, 12021575)):
+    #     balance = webSearchObj.desco_bill(i[0], i[1])
+    #     if int(balance) <= 250:
+    #         await descoChannel.send(f"Balance {balance} left in {i[1]}")
+
+    balance = webSearchObj.desco_bill(66110019262, 34222701)
+    if int(balance) <= 250:
+        await descoChannel.send(f"Balance {balance} left")
 
 
 @desco_balance_checker.before_loop
