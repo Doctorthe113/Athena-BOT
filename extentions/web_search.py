@@ -93,11 +93,10 @@ class Web_Search:
         try:
             hword = soup.find("h1").text
             partsOfSpeech = soup.find("h2").text
-            defParent = soup.find(class_="vg")
             definition = "\n- ".join(
                 [
                     i.text.removeprefix(": ").removesuffix(": such as")
-                    for i in defParent.find_all("span", class_="dtText")
+                    for i in soup.find_all("span", class_="dtText")
                 ]
             )
         except AttributeError:
