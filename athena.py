@@ -304,7 +304,7 @@ async def define(ctx, *, arg):
         await ctx.send(
             f"## {result["word"]} \n"
             + f"### {result["syllables"]} \n"
-            + f"__Pronounciation__: {result["phonetics"]} \n"
+            + f"__Pronounciation__: \n{result["phonetics"]} \n"
             + f"__Definitions__: \n- {result["definition"]}"
         )
     elif result != "Not available in the free dictionary":
@@ -318,7 +318,6 @@ async def define(ctx, *, arg):
 async def download(ctx, arg):
     ytdlVid = yt_dlp.YoutubeDL(
         {
-            "format": "best",
             "outtml": "-",
             "quiet": True,
         }
