@@ -318,27 +318,30 @@ async def define(ctx, *, arg):
 async def download(ctx, arg):
     ytdlVid = yt_dlp.YoutubeDL(
         {
-            "format": "best/bestvideo",
+            "format": "best",
             "outtml": "-",
             "quiet": True,
         }
     )
-    data = ytdlVid.extract_info(arg, download=False)
-    url = data["url"]
-    msg = await ctx.send("Downloading...")
     try:
-        response = requests.get(url, timeout=13, stream=True)
-        contentBinary = response.content
-        binaryFileObj = io.BytesIO(contentBinary)
-        video = nextcord.File(binaryFileObj, filename="video.mp4")
-        await msg.reply(file=video)
-    except (
-        nextcord.errors.HTTPException,
-        nextcord.errors.Forbidden,
-        requests.exceptions.Timeout,
-        requests.exceptions.HTTPError,
-    ) as e:
-        await msg.reply(f"An error has occured. {e}")
+        data = ytdlVid.extract_info(arg, download=False)
+        url = data["url"]
+        msg = await ctx.send("Downloading...")
+        try:
+            response = requests.get(url, timeout=13, stream=True)
+            contentBinary = response.content
+            binaryFileObj = io.BytesIO(contentBinary)
+            video = nextcord.File(binaryFileObj, filename="video.mp4")
+            await msg.reply(file=video)
+        except (
+            nextcord.errors.HTTPException,
+            nextcord.errors.Forbidden,
+            requests.exceptions.Timeout,
+            requests.exceptions.HTTPError,
+        ) as e:
+            await msg.reply(f"An error has occured. {e}")
+    except:
+        await ctx.send("There was an error downloading the video")
 
 
 # for NASA images. eg: "nasa"
