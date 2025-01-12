@@ -724,8 +724,8 @@ async def ping_doc():
     # waits for 8 hrs for a reaction response. If theres no reaction then the `except`
     # block will be executed
     try:
-        # reaction, user = await bot.wait_for("reaction_add", timeout=28800, check=check)
-        reaction, user = await bot.wait_for("reaction_add", timeout=30, check=check)
+        reaction, user = await bot.wait_for("reaction_add", timeout=28800, check=check)
+        # reaction, user = await bot.wait_for("reaction_add", timeout=30, check=check)
         db_write(True)
         await pingMsg.edit(content="Response recieved. Thank you!")
     except asyncio.TimeoutError:
@@ -753,6 +753,14 @@ async def ping_doc():
 @ping_doc.before_loop
 async def before_ping_doc():
     await bot.wait_until_ready()
+
+
+if __name__ == "__main__":
+    change_status.start()
+    ping_doc.start()
+    desco_balance_checker.start()
+    # birthday_reminder.start()
+    bot.run(TOKEN)
 
 
 # # to wish happy birthday
@@ -790,11 +798,3 @@ async def before_ping_doc():
 # @birthday_reminder.before_loop
 # async def before_birthday_reminder():
 #     await bot.wait_until_ready()
-
-
-if __name__ == "__main__":
-    change_status.start()
-    ping_doc.start()
-    desco_balance_checker.start()
-    # birthday_reminder.start()
-    bot.run(TOKEN)
