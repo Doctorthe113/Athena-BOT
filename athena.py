@@ -1,7 +1,6 @@
 # author: @doctorthe113
 # github: https://github.com/Doctorthe113/Athena-BOT
-# version: 1.13.2
-
+VERSION = "1.13.3"
 
 # built-in libraries
 import asyncio
@@ -85,7 +84,7 @@ async def on_ready():
     global logChannel
     logChannel = await bot.fetch_channel(1115589968929239153)
 
-    print(f"{loginTime}: Logged in as {bot.user}")
+    print(f"{loginTime}: Logged in as {bot.user} - version {VERSION}")
     thread: int = threading.active_count()
     print(f"Current active thread count: {thread}")
 
