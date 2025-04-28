@@ -120,6 +120,8 @@ async def on_message(rawMsg: nextcord.Message):
 
     # logging messages
     if rawMsg.channel != logChannel and msgChannelId not in logGuilds:
+        if len(rawMsg.content) > 2000:
+            return
         await logChannel.send(
             f"{currentTime}: {rawMsg.author.name} -> {rawMsg.content}"
         )
@@ -636,10 +638,12 @@ async def desco_balance_checker():
     #     balance = webSearchObj.desco_bill(i[0], i[1])
     #     if int(balance) <= 250:
     #         await descoChannel.send(f"Balance {balance} left in {i[1]}")
-
-    balance = webSearchObj.desco_bill(66110019262, 34222701)
-    if int(balance) <= 250:
-        await descoChannel.send(f"Balance {balance} left")
+    try:
+        balance = webSearchObj.desco_bill(66110019262, 34222701)
+        if int(balance) <= 250:
+            await descoChannel.send(f"Balance {balance} left")
+    except:
+        return
 
 
 @desco_balance_checker.before_loop
@@ -757,10 +761,10 @@ async def before_ping_doc():
 
 if __name__ == "__main__":
     change_status.start()
-    # ping_doc.start()
     desco_balance_checker.start()
-    # birthday_reminder.start()
     bot.run(TOKEN)
+    # ping_doc.start()
+    # birthday_reminder.start()
 
 
 # # to wish happy birthday

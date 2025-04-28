@@ -7,7 +7,6 @@ class Phrase:
         self.PREFIX = (
             "athena ",
             "hey athena ",
-            "hi athena ",
             "hello athena ",
             "sup athena ",
             "athena senpai ",
@@ -18,8 +17,6 @@ class Phrase:
             "Sup Athena ",
             "Athena senpai ",
             "<@1085635807773208616> ",
-            "$",
-            "?",
         )
         self.GREETINGPROMPT = (
             "hi",
