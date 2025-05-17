@@ -1,7 +1,13 @@
 .env
+<<<<<<< HEAD
 .env(prod)
 .venv/
+=======
+>>>>>>> prod
 test.ipynb
 test.py
+test.json
 __pycache__/
 .dockerignore
+.netrc
+.venv

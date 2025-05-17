@@ -1,13 +1,4 @@
 from .phrases import Phrase
-from .web_search import WebSearch
-from .queue import (
-    queue_check,
-    queue_del,
-    queue_grab,
-    queue_loop,
-    queue_make,
-    queue_add,
-    queue_remove,
-    queue_shuffle,
-)
+from .web_search import Web_Search
+from .music_playback import Music_Player, Player_Buttons, Dropdown_View
 from .nasa import Nasa
