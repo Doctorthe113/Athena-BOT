@@ -11,15 +11,16 @@ import re
 import sys
 import threading
 import random
+import datetime
 from itertools import cycle
 from collections import OrderedDict
 
 # external libraries and apis
+from dotenv import load_dotenv
 import nextcord
 import psutil
 import requests
 import yt_dlp
-import datetime
 import googletrans
 
 from nextcord import Interaction, Embed
@@ -49,6 +50,8 @@ statuses: OrderedDict = cycle(
         "Currently hosted on the cloud \\o/",
     ]
 )
+
+load_dotenv()
 
 TOKEN: str = os.getenv(key="TOKEN")
 GOOGLE_API: str = os.getenv(key="googleAPI")
