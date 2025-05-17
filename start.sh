@@ -1,3 +1,3 @@
 #!/bin/bash
 source .venv/bin/activate
-python monica.py
+python athena.py
