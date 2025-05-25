@@ -1,6 +1,6 @@
 # author: @doctorthe113
 # github: https://github.com/Doctorthe113/Athena-BOT
-VERSION = "1.13.3"
+VERSION = "1.13.4"
 
 # built-in libraries
 import asyncio
@@ -325,6 +325,7 @@ async def download(ctx, arg):
             "format": "best",
             "outtml": "-",
             "quiet": True,
+            "cookiefile": "./cookies.txt",
         }
     )
     try:
@@ -345,7 +346,7 @@ async def download(ctx, arg):
         ) as e:
             await msg.reply(f"An error has occured. {e}")
     except:
-        await ctx.send("There was an error downloading the video")
+        await ctx.send("There was an error extracting the video information")
 
 
 # for NASA images. eg: "nasa"
@@ -557,6 +558,7 @@ async def log(interaction: Interaction):
 @bot.slash_command(name="music_player", description="Intiates the music player")
 async def music_player(interaction: Interaction):
     try:
+        print(interaction.user.voice.channel)
         musicVc: nextcord.VoiceClient = await interaction.user.voice.channel.connect()
         embed: nextcord.Embed = await musicPlaybackObj.embed_maker(
             "Music player",
@@ -570,6 +572,7 @@ async def music_player(interaction: Interaction):
 
         musicVcs[interaction.guild.id] = [musicVc]
         musicPlaybackObj.queue_make(interaction.guild, musicVc, embedMsg)
+
     except:
         await interaction.response.send_message(
             "An error occurred, please try again!", ephemeral=True

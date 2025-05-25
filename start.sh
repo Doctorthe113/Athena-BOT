@@ -1,4 +1,4 @@
 #!/bin/bash
-pyenv local 3.11.2
+pyenv local 3.12
 source .venv/bin/activate
 python athena.py

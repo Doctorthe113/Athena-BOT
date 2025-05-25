@@ -1,9 +1,7 @@
 .env
-<<<<<<< HEAD
 .env(prod)
+cookies.txt
 .venv/
-=======
->>>>>>> prod
 test.ipynb
 test.py
 test.json
