@@ -326,7 +326,7 @@ async def download(ctx, arg):
             "format": "best",
             "outtml": "-",
             "quiet": True,
-            "cookiefile": "./cookies.txt",
+            "netrc_location": "./.netrc",
         }
     )
     try:
