@@ -1,6 +1,6 @@
 # author: @doctorthe113
 # github: https://github.com/Doctorthe113/Athena-BOT
-VERSION = "1.13.6"
+VERSION = "1.13.7"
 
 # built-in libraries
 import asyncio
@@ -326,7 +326,7 @@ async def download(ctx, arg):
             "format": "best",
             "outtml": "-",
             "quiet": True,
-            "netrc_location": "./cookies.txt",
+            "cookiefile": "./cookies.txt",
         }
     )
     try:
