@@ -1,6 +1,6 @@
 # author: @doctorthe113
 # github: https://github.com/Doctorthe113/Athena-BOT
-VERSION = "1.13.4"
+VERSION = "1.13.5"
 
 # built-in libraries
 import asyncio
