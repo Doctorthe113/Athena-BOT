@@ -4,6 +4,7 @@ VERSION = "1.13.7"
 
 # built-in libraries
 import asyncio
+from dbm import error
 import io
 import os
 import json
@@ -247,7 +248,7 @@ async def tell(ctx, *, arg):
 async def i(ctx, *, arg):
     if not arg.startswith("am bored"):
         return None
-    await ctx.send(f"Here's an activity for you: {phraseObj.bored()}")
+    await ctx.send(f"Depracted Command for now")
 
 
 # for checking resources. eg: "check resources"
@@ -278,7 +279,7 @@ async def google(ctx, *, arg):
     await ctx.send(result)
 
 
-# for searching wikipedia. eg: "search x on wikipedia"
+# for searching wikipedia. eg: "search x for wikipedia"
 @bot.command()
 async def search(ctx, *, arg):
     if not (arg.startswith("for") and arg.endswith(" on wikipedia")):
@@ -427,9 +428,10 @@ async def reddit(ctx, *, arg):
         result = webSearchObj.reddit(REDDIT_CLIENT, REDDIT_SECRET, arg)
         await ctx.send(f"[{arg}]({result})")
     else:
-        await ctx.send("Not a valid subreddit 😔. Run $help to find it :3")
+        await ctx.send("Not a valid subreddit 😔. Run `athena help` to find it :3")
 
 
+# for updating
 @bot.command()
 async def update(ctx):
     if ctx.author.id != 699342617095438479:
@@ -446,6 +448,44 @@ async def update(ctx):
         os.execl(currentProccess, currentProccess, *sys.argv)
     except:
         await ctx.send("Unable to update. Please check console!")
+
+
+# error handler
+@bot.event
+async def on_command_error(ctx, error):
+    commands: list = [
+        "ping",
+        "help",
+        "tell me a joke",
+        "i am bored",
+        "check resources",
+        "what is",
+        "google",
+        "search for {x} on wikipedia",
+        "purge",
+        "define",
+        "download",
+        "nasa",
+        "agify",
+        "dog",
+        "cat",
+        "cocktail random",
+        "fact",
+        "bucket",
+        "rhyme",
+        "reddit",
+        "update",
+    ]
+
+    if type(error) == nextcord.ext.commands.errors.CommandNotFound:
+        await ctx.send(
+            str(error) + f"\nUse one of the following commands: `{", ".join(commands)}`"
+        )
+    elif type(error) == nextcord.ext.commands.errors.CommandInvokeError:
+        await ctx.send("Something went wrong when processing your request.")
+        print(error)
+    else:
+        print(error)
 
 
 # * Slash Commands
@@ -556,81 +596,82 @@ async def log(interaction: Interaction):
     )
 
 
+# deprecated - for now. Its painfully hard to maintain this.
 # music player starter
-@bot.slash_command(name="music_player", description="Intiates the music player")
-async def music_player(interaction: Interaction):
-    try:
-        print(interaction.user.voice.channel)
-        musicVc: nextcord.VoiceClient = await interaction.user.voice.channel.connect()
-        embed: nextcord.Embed = await musicPlaybackObj.embed_maker(
-            "Music player",
-            ("Songs in queue", ""),
-            ("Currently playing <:player:1214062123953422386>", ""),
-            ("", ""),
-        )
-        embedMsg: nextcord.Message = await interaction.response.send_message(
-            embed=embed, view=Player_Buttons(musicPlaybackObj, musicVc)
-        )
+# @bot.slash_command(name="music_player", description="Intiates the music player")
+# async def music_player(interaction: Interaction):
+#     try:
+#         print(interaction.user.voice.channel)
+#         musicVc: nextcord.VoiceClient = await interaction.user.voice.channel.connect()
+#         embed: nextcord.Embed = await musicPlaybackObj.embed_maker(
+#             "Music player",
+#             ("Songs in queue", ""),
+#             ("Currently playing <:player:1214062123953422386>", ""),
+#             ("", ""),
+#         )
+#         embedMsg: nextcord.Message = await interaction.response.send_message(
+#             embed=embed, view=Player_Buttons(musicPlaybackObj, musicVc)
+#         )
 
-        musicVcs[interaction.guild.id] = [musicVc]
-        musicPlaybackObj.queue_make(interaction.guild, musicVc, embedMsg)
+#         musicVcs[interaction.guild.id] = [musicVc]
+#         musicPlaybackObj.queue_make(interaction.guild, musicVc, embedMsg)
 
-    except:
-        await interaction.response.send_message(
-            "An error occurred, please try again!", ephemeral=True
-        )
-
-
-# music search
-@bot.slash_command(name="music_search", description="Searches for a song")
-async def music_search(interaction: Interaction, query: str):
-    data: tuple = musicPlaybackObj.music_search(query)
-    titles: str = "\n".join(f"{i}. {s}" for i, s in enumerate(data[0]))
-    embed: Embed = await musicPlaybackObj.embed_maker(
-        "Song finder", ("Titles", titles), ("", ""), ("", "")
-    )
-    await interaction.response.send_message(
-        embed=embed,
-        view=Dropdown_View(data[1], musicPlaybackObj),
-        ephemeral=True,
-    )
+#     except:
+#         await interaction.response.send_message(
+#             "An error occurred, please try again!", ephemeral=True
+#         )
 
 
-# music adder using url
-@bot.slash_command(name="music_add", description="Adds song(s) using links only")
-async def music_add(interaction: Interaction, url: str):
-    try:
-        await interaction.response.send_message("Song(s) added!", ephemeral=True)
-        await musicPlaybackObj.queue_add_handler(interaction.guild, url)
-    except:
-        await interaction.response.send_message(
-            "Please use a valid url!", ephemeral=True
-        )
+# # music search
+# @bot.slash_command(name="music_search", description="Searches for a song")
+# async def music_search(interaction: Interaction, query: str):
+#     data: tuple = musicPlaybackObj.music_search(query)
+#     titles: str = "\n".join(f"{i}. {s}" for i, s in enumerate(data[0]))
+#     embed: Embed = await musicPlaybackObj.embed_maker(
+#         "Song finder", ("Titles", titles), ("", ""), ("", "")
+#     )
+#     await interaction.response.send_message(
+#         embed=embed,
+#         view=Dropdown_View(data[1], musicPlaybackObj),
+#         ephemeral=True,
+#     )
 
 
-# to check queue if it exceeds embed limit
-@bot.slash_command(name="music_queue_show", description="Shows the queue")
-async def music_queue_show(interaction: Interaction):
-    titles: list = musicPlaybackObj.queue_grab(interaction.guild)[1]
-    queueList: str = "\n".join(f"{i}. {s}" for i, s in enumerate(titles))
-    try:
-        await interaction.response.send_message(queueList, ephemeral=True)
-    except nextcord.errors.HTTPException:
-        await interaction.response.send_message(
-            "Queue is too big for discord a message!", ephemeral=True
-        )
+# # music adder using url
+# @bot.slash_command(name="music_add", description="Adds song(s) using links only")
+# async def music_add(interaction: Interaction, url: str):
+#     try:
+#         await interaction.response.send_message("Song(s) added!", ephemeral=True)
+#         await musicPlaybackObj.queue_add_handler(interaction.guild, url)
+#     except:
+#         await interaction.response.send_message(
+#             "Please use a valid url!", ephemeral=True
+#         )
 
 
-# music player stopper
-@bot.slash_command(name="music_stop", description="Stops the music player")
-async def music_stop(interaction: Interaction):
-    try:
-        musicVc = musicVcs[interaction.guild.id][0]
-        await musicPlaybackObj.queue_del(interaction.guild)
-        await musicVc.disconnect()
-        await interaction.response.send_message("Music player stopped!")
-    except:
-        await interaction.response.send_message("I am not playing music!")
+# # to check queue if it exceeds embed limit
+# @bot.slash_command(name="music_queue_show", description="Shows the queue")
+# async def music_queue_show(interaction: Interaction):
+#     titles: list = musicPlaybackObj.queue_grab(interaction.guild)[1]
+#     queueList: str = "\n".join(f"{i}. {s}" for i, s in enumerate(titles))
+#     try:
+#         await interaction.response.send_message(queueList, ephemeral=True)
+#     except nextcord.errors.HTTPException:
+#         await interaction.response.send_message(
+#             "Queue is too big for discord a message!", ephemeral=True
+#         )
+
+
+# # music player stopper
+# @bot.slash_command(name="music_stop", description="Stops the music player")
+# async def music_stop(interaction: Interaction):
+#     try:
+#         musicVc = musicVcs[interaction.guild.id][0]
+#         await musicPlaybackObj.queue_del(interaction.guild)
+#         await musicVc.disconnect()
+#         await interaction.response.send_message("Music player stopped!")
+#     except:
+#         await interaction.response.send_message("I am not playing music!")
 
 
 # * Other functions that needs to run periodically
