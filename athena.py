@@ -1,6 +1,6 @@
 # author: @doctorthe113
 # github: https://github.com/Doctorthe113/Athena-BOT
-VERSION = "1.13.7"
+VERSION = "1.13.8"
 
 # built-in libraries
 import asyncio
@@ -401,7 +401,7 @@ async def fact(ctx):
 
 # for random bucketlist. eg: "bucketlist"
 @bot.command()
-async def bucketlist(ctx, *, arg):
+async def bucketlist(ctx):
     await ctx.send(phraseObj.bucket_list(NINJA_API))
 
 
