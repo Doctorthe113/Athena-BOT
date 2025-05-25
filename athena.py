@@ -401,9 +401,7 @@ async def fact(ctx):
 
 # for random bucketlist. eg: "bucketlist"
 @bot.command()
-async def bucket(ctx, *, arg):
-    if not arg == "list":
-        return None
+async def bucketlist(ctx, *, arg):
     await ctx.send(phraseObj.bucket_list(NINJA_API))
 
 
@@ -457,7 +455,6 @@ async def on_command_error(ctx, error):
         "ping",
         "help",
         "tell me a joke",
-        "i am bored",
         "check resources",
         "what is",
         "google",
@@ -471,7 +468,7 @@ async def on_command_error(ctx, error):
         "cat",
         "cocktail random",
         "fact",
-        "bucket",
+        "bucketlist",
         "rhyme",
         "reddit",
         "update",

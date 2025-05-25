@@ -271,7 +271,7 @@ __**Command List**__:
 15. `cat` - Get a random cat picture. *eg*: `cat`
 16. `cocktail random` or `cocktail {x}` - Get a random cocktail or look for one (WIP)
 17. `fact` - Get a random fact
-18. `bucket list` - Get a random bucket list item
+18. `bucketlist list` - Get a random bucketlist list item
 19. `rhyme {x}` - To find a word that rhymes with another word. *eg*: `rhyme life`
 20. `reddit {x}` - Get a random reddit post from valid subreddit. *eg*: `reddit cute`
 Valid subreddits are: `cute`, `naturegifs`, `wholesomememes`, `animalsbeingbros`, `aww`
