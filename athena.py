@@ -14,6 +14,7 @@ import random
 import datetime
 from itertools import cycle
 from collections import OrderedDict
+import traceback
 
 # external libraries and apis
 from dotenv import load_dotenv
@@ -346,6 +347,7 @@ async def download(ctx, arg):
         ) as e:
             await msg.reply(f"An error has occured. {e}")
     except:
+        traceback.print_exc()
         await ctx.send("There was an error extracting the video information")
 
 
