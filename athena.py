@@ -327,6 +327,7 @@ async def download(ctx, arg):
             "outtml": "-",
             "quiet": True,
             "netrc_location": "./.netrc",
+            "usenetrc": True,
         }
     )
     try:
